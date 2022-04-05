@@ -1,0 +1,279 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        05/30/2019  13:55:48  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+D:\KEIL\C51\BIN\BL51.EXE STARTUP.obj, STC-B_DEMO.obj TO STC-B_DEMO
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  STARTUP.obj (?C_STARTUP)
+  STC-B_DEMO.obj (STC_B_DEMO)
+  D:\KEIL\C51\LIB\C51S.LIB (?C_INIT)
+  D:\KEIL\C51\LIB\C51S.LIB (?C?COPY)
+
+
+LINK MAP OF MODULE:  STC-B_DEMO (?C_STARTUP)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     000EH     UNIT         _DATA_GROUP_
+                    0016H     000AH                  *** GAP ***
+            BIT     0020H.0   0000H.3   UNIT         ?BI?STC_B_DEMO
+                    0020H.3   0000H.5                *** GAP ***
+            DATA    0021H     000CH     UNIT         ?DT?STC_B_DEMO
+            IDATA   002DH     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0007H     UNIT         ?PR?FUNC_1MS?STC_B_DEMO
+            CODE    000AH     0001H     UNIT         ?PR?FUNC_10MS?STC_B_DEMO
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     00F6H     UNIT         ?C?LIB_CODE
+            CODE    0104H     008CH     UNIT         ?C_C51STARTUP
+            CODE    0190H     0055H     UNIT         ?PR?_DISPLAY?STC_B_DEMO
+            CODE    01E5H     0040H     UNIT         ?PR?MAIN?STC_B_DEMO
+            CODE    0225H     0023H     UNIT         ?PR?TIMER0_ISR?STC_B_DEMO
+            CODE    0248H     0016H     UNIT         ?PR?_LED_PRINT?STC_B_DEMO
+            CODE    025EH     0011H     UNIT         ?PR?TIMER0_INIT?STC_B_DEMO
+            CODE    026FH     0010H     UNIT         ?C_INITSEG
+            CODE    027FH     000CH     UNIT         ?PR?GPIO_INIT?STC_B_DEMO
+            CODE    028BH     000CH     UNIT         ?CO?STC_B_DEMO
+            CODE    0297H     0001H     UNIT         ?PR?FUNC_100MS?STC_B_DEMO
+
+
+
+OVERLAY MAP OF MODULE:   STC-B_DEMO (?C_STARTUP)
+
+
+SEGMENT                              DATA_GROUP 
+  +--> CALLED SEGMENT              START    LENGTH
+--------------------------------------------------
+?C_C51STARTUP                      -----    -----
+  +--> ?PR?MAIN?STC_B_DEMO
+  +--> ?C_INITSEG
+
+BL51 BANKED LINKER/LOCATER V6.22                                                      05/30/2019  13:55:48  PAGE 2
+
+
+?PR?MAIN?STC_B_DEMO                -----    -----
+  +--> ?PR?GPIO_INIT?STC_B_DEMO
+  +--> ?PR?TIMER0_INIT?STC_B_DEMO
+  +--> ?PR?_LED_PRINT?STC_B_DEMO
+  +--> ?PR?FUNC_1MS?STC_B_DEMO
+  +--> ?PR?FUNC_10MS?STC_B_DEMO
+  +--> ?PR?FUNC_100MS?STC_B_DEMO
+
+?PR?_LED_PRINT?STC_B_DEMO          0008H    0008H
+
+?PR?FUNC_1MS?STC_B_DEMO            -----    -----
+  +--> ?PR?_DISPLAY?STC_B_DEMO
+
+?PR?_DISPLAY?STC_B_DEMO            0008H    000EH
+  +--> ?CO?STC_B_DEMO
+
+
+
+SYMBOL TABLE OF MODULE:  STC-B_DEMO (?C_STARTUP)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        ?C_STARTUP
+  C:0104H         SEGMENT       ?C_C51STARTUP
+  I:002DH         SEGMENT       ?STACK
+  C:0000H         PUBLIC        ?C_STARTUP
+  D:00E0H         SYMBOL        ACC
+  D:00F0H         SYMBOL        B
+  D:0083H         SYMBOL        DPH
+  D:0082H         SYMBOL        DPL
+  N:0000H         SYMBOL        IBPSTACK
+  N:0100H         SYMBOL        IBPSTACKTOP
+  N:0080H         SYMBOL        IDATALEN
+  C:0107H         SYMBOL        IDATALOOP
+  N:0000H         SYMBOL        PBPSTACK
+  N:0100H         SYMBOL        PBPSTACKTOP
+  N:0000H         SYMBOL        PDATALEN
+  N:0000H         SYMBOL        PDATASTART
+  N:0000H         SYMBOL        PPAGE
+  N:0000H         SYMBOL        PPAGEENABLE
+  D:00A0H         SYMBOL        PPAGE_SFR
+  D:0081H         SYMBOL        SP
+  C:0104H         SYMBOL        STARTUP1
+  N:0000H         SYMBOL        XBPSTACK
+  N:0000H         SYMBOL        XBPSTACKTOP
+  N:0000H         SYMBOL        XDATALEN
+  N:0000H         SYMBOL        XDATASTART
+  C:0000H         LINE#         126
+  C:0104H         LINE#         133
+  C:0106H         LINE#         134
+  C:0107H         LINE#         135
+  C:0108H         LINE#         136
+  C:010AH         LINE#         185
+  C:010DH         LINE#         196
+  -------         ENDMOD        ?C_STARTUP
+
+BL51 BANKED LINKER/LOCATER V6.22                                                      05/30/2019  13:55:48  PAGE 3
+
+
+  -------         MODULE        STC_B_DEMO
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0021H         PUBLIC        count_1mS
+  D:0093H         PUBLIC        P0M1
+  D:0096H         PUBLIC        P2M0
+  D:0080H         PUBLIC        P0
+  D:0095H         PUBLIC        P2M1
+  D:0090H         PUBLIC        P1
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  D:00C0H         PUBLIC        P4
+  D:00C8H         PUBLIC        P5
+  B:00A8H.7       PUBLIC        EA
+  D:00E8H         PUBLIC        P6
+  D:00F8H         PUBLIC        P7
+  D:00A8H         PUBLIC        IE
+  D:00B8H         PUBLIC        IP
+  D:0022H         PUBLIC        Dis_flag
+  B:0020H.0       PUBLIC        flag_10mS
+  D:00D8H         PUBLIC        CCON
+  C:01E5H         PUBLIC        main
+  C:027FH         PUBLIC        GPIO_Init
+  C:025EH         PUBLIC        Timer0_Init
+  D:0023H         PUBLIC        count_10mS
+  C:000AH         PUBLIC        Func_10ms
+  D:0024H         PUBLIC        disp
+  D:0098H         PUBLIC        SCON
+  D:0089H         PUBLIC        TMOD
+  D:0088H         PUBLIC        TCON
+  D:008EH         PUBLIC        AUXR
+  C:028BH         SYMBOL        _?ix1000
+  B:00A8H.1       PUBLIC        ET0
+  D:008CH         PUBLIC        TH0
+  B:0020H.1       PUBLIC        flag_100mS
+  D:008AH         PUBLIC        TL0
+  B:0088H.4       PUBLIC        TR0
+  C:0190H         PUBLIC        _Display
+  C:0003H         PUBLIC        Func_1mS
+  C:0297H         PUBLIC        Func_100ms
+  C:0225H         PUBLIC        Timer0_isr
+  C:0248H         PUBLIC        _LED_print
+  B:0020H.2       PUBLIC        flag_1mS
+  D:00D0H         PUBLIC        PSW
+  D:0094H         PUBLIC        P0M0
+  -------         PROC          _DISPLAY
+  D:0008H         SYMBOL        Dis_min
+  D:0009H         SYMBOL        Dis_max
+  -------         DO            
+  D:000AH         SYMBOL        selData
+  -------         ENDDO         
+  C:0190H         LINE#         25
+  C:0194H         LINE#         26
+  C:01A7H         LINE#         30
+  C:01AAH         LINE#         31
+  C:01B6H         LINE#         32
+  C:01BDH         LINE#         33
+  C:01C6H         LINE#         34
+BL51 BANKED LINKER/LOCATER V6.22                                                      05/30/2019  13:55:48  PAGE 4
+
+
+  C:01D2H         LINE#         35
+  C:01D2H         LINE#         36
+  C:01E4H         LINE#         37
+  -------         ENDPROC       _DISPLAY
+  -------         PROC          _LED_PRINT
+  D:0007H         SYMBOL        d0
+  D:0005H         SYMBOL        d1
+  D:0003H         SYMBOL        d2
+  D:000BH         SYMBOL        d3
+  D:000CH         SYMBOL        d4
+  D:000DH         SYMBOL        d5
+  D:000EH         SYMBOL        d6
+  D:000FH         SYMBOL        d7
+  C:0248H         LINE#         39
+  C:0248H         LINE#         40
+  C:0248H         LINE#         41
+  C:024AH         LINE#         42
+  C:024CH         LINE#         43
+  C:024EH         LINE#         44
+  C:0251H         LINE#         45
+  C:0254H         LINE#         46
+  C:0257H         LINE#         47
+  C:025AH         LINE#         48
+  C:025DH         LINE#         49
+  -------         ENDPROC       _LED_PRINT
+  -------         PROC          GPIO_INIT
+  C:027FH         LINE#         55
+  C:027FH         LINE#         56
+  C:027FH         LINE#         57
+  C:0282H         LINE#         58
+  C:0285H         LINE#         59
+  C:0287H         LINE#         60
+  C:028AH         LINE#         61
+  -------         ENDPROC       GPIO_INIT
+  -------         PROC          TIMER0_INIT
+  C:025EH         LINE#         63
+  C:025EH         LINE#         64
+  C:025EH         LINE#         65
+  C:0261H         LINE#         66
+  C:0264H         LINE#         67
+  C:0267H         LINE#         68
+  C:026AH         LINE#         69
+  C:026CH         LINE#         70
+  C:026EH         LINE#         71
+  -------         ENDPROC       TIMER0_INIT
+  -------         PROC          TIMER0_ISR
+  C:0225H         LINE#         73
+  C:0229H         LINE#         75
+  C:022BH         LINE#         76
+  C:022DH         LINE#         77
+  C:0239H         LINE#         78
+  C:0243H         LINE#         79
+  -------         ENDPROC       TIMER0_ISR
+  -------         PROC          FUNC_1MS
+  C:0003H         LINE#         81
+  C:0003H         LINE#         82
+  C:0003H         LINE#         83
+BL51 BANKED LINKER/LOCATER V6.22                                                      05/30/2019  13:55:48  PAGE 5
+
+
+  -------         ENDPROC       FUNC_1MS
+  -------         PROC          FUNC_10MS
+  C:000AH         LINE#         86
+  C:000AH         LINE#         87
+  C:000AH         LINE#         89
+  -------         ENDPROC       FUNC_10MS
+  -------         PROC          FUNC_100MS
+  C:0297H         LINE#         91
+  C:0297H         LINE#         92
+  C:0297H         LINE#         94
+  -------         ENDPROC       FUNC_100MS
+  -------         PROC          MAIN
+  C:01E5H         LINE#         96
+  C:01E5H         LINE#         97
+  C:01E5H         LINE#         98
+  C:01E8H         LINE#         99
+  C:01EBH         LINE#         100
+  C:01EDH         LINE#         102
+  C:0205H         LINE#         103
+  C:0208H         LINE#         105
+  C:020BH         LINE#         107
+  C:020BH         LINE#         108
+  C:020BH         LINE#         109
+  C:0213H         LINE#         110
+  C:021BH         LINE#         111
+  C:0223H         LINE#         112
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        STC_B_DEMO
+
+  -------         MODULE        ?C?COPY
+  C:00DEH         PUBLIC        ?C?COPY
+  -------         ENDMOD        ?C?COPY
+
+Program Size: data=35.3 xdata=0 code=664
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

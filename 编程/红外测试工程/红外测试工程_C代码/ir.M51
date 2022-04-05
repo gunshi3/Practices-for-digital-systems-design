@@ -1,0 +1,207 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        04/24/2019  15:11:26  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+D:\KEIL\C51\BIN\BL51.EXE STARTUP.obj, ir.obj TO ir
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  STARTUP.obj (?C_STARTUP)
+  ir.obj (IR)
+  D:\KEIL\C51\LIB\C51S.LIB (?C_INIT)
+
+
+LINK MAP OF MODULE:  ir (?C_STARTUP)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0001H     UNIT         ?DT?IR
+            IDATA   0009H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0004H     UNIT         ?C_INITSEG
+                    0007H     0004H                  *** GAP ***
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     008CH     UNIT         ?C_C51STARTUP
+            CODE    009AH     0032H     UNIT         ?PR?MAIN?IR
+            CODE    00CCH     0014H     UNIT         ?PR?INITT0?IR
+            CODE    00E0H     000FH     UNIT         ?PR?T0_PROCESSS?IR
+            CODE    00EFH     000DH     UNIT         ?PR?DELAY?IR
+
+
+
+OVERLAY MAP OF MODULE:   ir (?C_STARTUP)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?C_C51STARTUP
+  +--> ?PR?MAIN?IR
+  +--> ?C_INITSEG
+
+?PR?MAIN?IR
+  +--> ?PR?INITT0?IR
+  +--> ?PR?DELAY?IR
+
+
+
+SYMBOL TABLE OF MODULE:  ir (?C_STARTUP)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/24/2019  15:11:26  PAGE 2
+
+
+  -------         MODULE        ?C_STARTUP
+  C:000EH         SEGMENT       ?C_C51STARTUP
+  I:0009H         SEGMENT       ?STACK
+  C:0000H         PUBLIC        ?C_STARTUP
+  D:00E0H         SYMBOL        ACC
+  D:00F0H         SYMBOL        B
+  D:0083H         SYMBOL        DPH
+  D:0082H         SYMBOL        DPL
+  N:0000H         SYMBOL        IBPSTACK
+  N:0100H         SYMBOL        IBPSTACKTOP
+  N:0080H         SYMBOL        IDATALEN
+  C:0011H         SYMBOL        IDATALOOP
+  N:0000H         SYMBOL        PBPSTACK
+  N:0100H         SYMBOL        PBPSTACKTOP
+  N:0000H         SYMBOL        PDATALEN
+  N:0000H         SYMBOL        PDATASTART
+  N:0000H         SYMBOL        PPAGE
+  N:0000H         SYMBOL        PPAGEENABLE
+  D:00A0H         SYMBOL        PPAGE_SFR
+  D:0081H         SYMBOL        SP
+  C:000EH         SYMBOL        STARTUP1
+  N:0000H         SYMBOL        XBPSTACK
+  N:0000H         SYMBOL        XBPSTACKTOP
+  N:0000H         SYMBOL        XDATALEN
+  N:0000H         SYMBOL        XDATASTART
+  C:0000H         LINE#         126
+  C:000EH         LINE#         133
+  C:0010H         LINE#         134
+  C:0011H         LINE#         135
+  C:0012H         LINE#         136
+  C:0014H         LINE#         185
+  C:0017H         LINE#         196
+  -------         ENDMOD        ?C_STARTUP
+
+  -------         MODULE        IR
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0093H         PUBLIC        P0M1
+  D:0096H         PUBLIC        P2M0
+  D:0080H         PUBLIC        P0
+  D:0095H         PUBLIC        P2M1
+  D:0090H         PUBLIC        P1
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  D:00C0H         PUBLIC        P4
+  D:00C8H         PUBLIC        P5
+  B:00A8H.7       PUBLIC        EA
+  D:00E8H         PUBLIC        P6
+  D:00F8H         PUBLIC        P7
+  B:00A0H.3       PUBLIC        sbtLedSel
+  D:00A8H         PUBLIC        IE
+  D:00B8H         PUBLIC        IP
+  C:00CCH         PUBLIC        InitT0
+  D:0008H         PUBLIC        ucPutIrFlagN
+  D:00D8H         PUBLIC        CCON
+  C:009AH         PUBLIC        main
+  B:00B0H.2       PUBLIC        sbtKey1
+  B:00B0H.6       PUBLIC        sbtGetIr
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/24/2019  15:11:26  PAGE 3
+
+
+  D:0098H         PUBLIC        SCON
+  D:0089H         PUBLIC        TMOD
+  D:0088H         PUBLIC        TCON
+  C:00E0H         PUBLIC        T0_Processs
+  D:008EH         PUBLIC        AUXR
+  B:00B0H.5       PUBLIC        sbtPutIr
+  B:00A8H.1       PUBLIC        ET0
+  B:0088H.5       PUBLIC        TF0
+  D:008CH         PUBLIC        TH0
+  D:008AH         PUBLIC        TL0
+  B:0088H.4       PUBLIC        TR0
+  C:00EFH         PUBLIC        Delay
+  D:00D0H         PUBLIC        PSW
+  D:0094H         PUBLIC        P0M0
+  -------         PROC          INITT0
+  C:00CCH         LINE#         17
+  C:00CCH         LINE#         18
+  C:00CCH         LINE#         19
+  C:00CFH         LINE#         20
+  C:00D2H         LINE#         21
+  C:00D5H         LINE#         22
+  C:00D8H         LINE#         23
+  C:00DBH         LINE#         24
+  C:00DDH         LINE#         25
+  C:00DFH         LINE#         26
+  -------         ENDPROC       INITT0
+  -------         PROC          DELAY
+  -------         DO            
+  D:0007H         SYMBOL        i
+  D:0006H         SYMBOL        j
+  D:0005H         SYMBOL        k
+  -------         ENDDO         
+  C:00EFH         LINE#         29
+  C:00EFH         LINE#         30
+  C:00EFH         LINE#         32
+  C:00F1H         LINE#         33
+  C:00F3H         LINE#         34
+  C:00F5H         LINE#         36
+  C:00F5H         LINE#         38
+  C:00F5H         LINE#         39
+  C:00F7H         LINE#         40
+  C:00F7H         LINE#         41
+  C:00F9H         LINE#         42
+  C:00F9H         LINE#         43
+  C:00FBH         LINE#         44
+  -------         ENDPROC       DELAY
+  -------         PROC          T0_PROCESSS
+  C:00E0H         LINE#         47
+  C:00E2H         LINE#         49
+  C:00E6H         LINE#         50
+  C:00EAH         LINE#         52
+  C:00ECH         LINE#         53
+  -------         ENDPROC       T0_PROCESSS
+  -------         PROC          MAIN
+  C:009AH         LINE#         56
+  C:009AH         LINE#         57
+  C:009AH         LINE#         59
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/24/2019  15:11:26  PAGE 4
+
+
+  C:009DH         LINE#         60
+  C:00A0H         LINE#         61
+  C:00A3H         LINE#         62
+  C:00A5H         LINE#         64
+  C:00A7H         LINE#         65
+  C:00A9H         LINE#         67
+  C:00ACH         LINE#         68
+  C:00AEH         LINE#         69
+  C:00B0H         LINE#         71
+  C:00B0H         LINE#         72
+  C:00B0H         LINE#         73
+  C:00BBH         LINE#         74
+  C:00BEH         LINE#         75
+  C:00BEH         LINE#         76
+  C:00C1H         LINE#         77
+  C:00C4H         LINE#         78
+  C:00C7H         LINE#         79
+  C:00CAH         LINE#         80
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        IR
+
+Program Size: data=10.0 xdata=0 code=248
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

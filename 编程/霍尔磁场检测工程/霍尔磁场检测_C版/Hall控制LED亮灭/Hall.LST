@@ -1,0 +1,60 @@
+C51 COMPILER V9.51   HALL                                                                  04/24/2019 09:19:15 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE HALL
+OBJECT MODULE PLACED IN Hall.OBJ
+COMPILER INVOKED BY: d:\Keil\C51\BIN\C51.EXE Hall.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          /**********************
+   2          mysbtHall 磁场检测
+   3          型号:STC15F2K60S2 主频:11.0592MHz
+   4          ************************/
+   5          #include <STC15F2K60S2.H>
+   6          #define uint  unsigned int
+   7          #define uchar unsigned char
+   8          
+   9          /*---------引脚别名定义---------*/
+  10          sbit sbtLedSel = P2 ^ 3;   //发光二极管和数码管选择
+  11          sbit sbtHall = P1 ^ 2;     //霍尔引脚别名定义
+  12          
+  13          /*---------变量定义---------*/
+  14          uchar ucLed;           //用于接收霍尔的值
+  15          
+  16          /*---------初始化函数---------*/
+  17          void Init()
+  18          {
+  19   1          P2M1 = 0x00;
+  20   1          P2M0 = 0xff;
+  21   1          P0M1 = 0x00;
+  22   1          P0M0 = 0xff;
+  23   1          P1M1 = 0x00;
+  24   1          P1M0 = 0xff;
+  25   1          sbtLedSel = 1;
+  26   1      }
+  27          
+  28          /*---------主函数---------*/
+  29          void main()
+  30          {
+  31   1          Init();
+  32   1          while( 1 )
+  33   1          {
+  34   2              ucLed = sbtHall;
+  35   2              P0 = ucLed;
+  36   2          }
+  37   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     32    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

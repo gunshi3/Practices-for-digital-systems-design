@@ -1,0 +1,41 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+E:\Prtn 设计\DDA实验箱\STC单片机_便携板\2021小学期\STC_B程序结构V3.0_20210609发布版\STC_Demo.uvproj
+Project File Date:  06/09/2021
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+compiling main.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SEG7PRINT?DISPLAYER
+Program Size: data=26.4 xdata=102 code=1884
+creating hex file from ".\output\STC_DEMO_V3"...
+".\output\STC_DEMO_V3" - 0 Error(s), 1 Warning(s).
+Rebuild target 'Target 1'
+compiling main.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SEG7PRINT?DISPLAYER
+Program Size: data=26.4 xdata=102 code=1884
+creating hex file from ".\output\STC_DEMO_V3"...
+".\output\STC_DEMO_V3" - 0 Error(s), 1 Warning(s).
+Rebuild target 'Target 1'
+compiling main.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SETDISPLAYERAREA?DISPLAYER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SEG7PRINT?DISPLAYER
+Program Size: data=26.4 xdata=102 code=1881
+creating hex file from ".\output\STC_DEMO_V3"...
+".\output\STC_DEMO_V3" - 0 Error(s), 2 Warning(s).
+Rebuild target 'Target 1'
+compiling main.c...
+linking...
+Program Size: data=24.4 xdata=102 code=1946
+creating hex file from ".\output\STC_DEMO_V3"...
+".\output\STC_DEMO_V3" - 0 Error(s), 0 Warning(s).

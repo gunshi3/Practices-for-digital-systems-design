@@ -1,0 +1,245 @@
+C51 COMPILER V9.51   UART                                                                  04/24/2019 14:59:16 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN uart.OBJ
+COMPILER INVOKED BY: d:\Keil\C51\BIN\C51.EXE uart.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          /**********************
+   2          myUsbUart 串口测试
+   3          型号:STC15F2K60S2 主频:11.0592MHz
+   4          ************************/
+   5          #include<STC15F2K60S2.h>
+   6          #include<intrins.h>
+   7          #define uchar unsigned char
+   8          #define uint unsigned int
+   9          
+  10          /*---------宏定义---------*/
+  11          #define cstFocs      11059200L  //晶振频率
+  12          #define cstBaud1     9600       //波特率
+  13          #define cstKeyMaxNum 100        //按键抖动次数
+  14          
+  15          /*---------引脚别名定义---------*/
+  16          sbit sbtKey1 = P3 ^ 2 ;             //启动发送
+  17          sbit sbtKey2 = P3 ^ 3 ;             //数字减少
+  18          sbit sbtKey3 = P1 ^ 7 ;             //数字增加
+  19          sbit sbtLedSel = P2 ^ 3;
+  20          
+  21          /*---------变量定义---------*/
+  22          uchar ucT100usTimes;
+  23          
+  24          uint uiKey1Cnt;            //按键1计数
+  25          uint uiKey2Cnt;            //按键2计数
+  26          uint uiKey3Cnt;            //按键3计数
+  27          uint uiKeyAllCnt;          //按键总的抖动次数
+  28          bit btT1msFlag;            //1ms的标志
+  29          bit btKey1Current;/*key1当前的状态*/
+  30          bit btKey1Past;   /*key1前一个状态*/
+  31          bit btKey2Current;/*key2当前的状态*/
+  32          bit btKey2Past;   /*key2前一个状态*/
+  33          bit btKey3Current;/*key3当前的状态*/
+  34          bit btKey3Past;   /*key3前一个状态*/
+  35          
+  36          /*收发显示数据相关*/
+  37          bit btUart1SendBusy = 0 ;
+  38          uchar ucDateTmp;               //传输数据暂存
+  39          uchar ucDateDigState;
+  40          uchar arrSegSelect[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f, 0x77, 0x7c, 0x39, 0x5e
+             -, 0x79, 0x71}; //显示0-f
+  41          
+  42          /*---------定时器T0中断处理函数--------*/
+  43          void T0_Process() interrupt 1
+  44          {
+  45   1          TH0 = ( 65535 - 1000 ) / 256; //定时器初始值
+  46   1          TL0 = ( 65535 - 1000 ) % 256;
+  47   1          ucT100usTimes++;
+  48   1          if( ucT100usTimes == 10 )        //中断10次对应1ms
+  49   1          {
+  50   2              ucT100usTimes = 0;
+  51   2              btT1msFlag = 1;
+  52   2          }
+  53   1          ucDateDigState++;
+  54   1          if( ucDateDigState == 2 )
+C51 COMPILER V9.51   UART                                                                  04/24/2019 14:59:16 PAGE 2   
+
+  55   1              ucDateDigState = 0;
+  56   1          P0 = 0;
+  57   1          switch( ucDateDigState )
+  58   1          {
+  59   2              case 0:
+  60   2                  P2 = 0x00;  P0 = arrSegSelect[ucDateTmp / 16];  
+  61   2      break;
+  62   2              case 1:
+  63   2                  P2 = 0x01;  P0 = arrSegSelect[ucDateTmp % 16];  break;
+  64   2          }
+  65   1      }
+  66          
+  67          /*---------串口1初始化函数--------*/
+  68          void Uart1_Init( void )
+  69          {
+  70   1          AUXR = 0X80; //辅助寄存器 此时定时器0的速度是传统的12倍，不分频
+  71   1          SCON |= 0X50; //允许接收
+  72   1          TL1 = ( 65536 - ( cstFocs / 4 / cstBaud1 ) );
+  73   1          TH1 = ( 65536 - ( cstFocs / 4 / cstBaud1 ) ) >> 8;
+  74   1          AUXR |= 0X40; //辅助寄存器 此时定时器1的速度是传统的12倍，不分频
+  75   1          RI = 0;      //接收中断标志位
+  76   1          TI = 0;      //发送中断标志位
+  77   1          TR1 = 1;     //启动定时器1
+  78   1          ES = 1;      //串口中断允许位
+  79   1          EA = 1;      //总中断允许位
+  80   1          PS = 1 ;    //串口1中断高优先级
+  81   1      }
+  82          
+  83          /*---------发送数据函数--------*/
+  84          void SendData( unsigned char dat )
+  85          {
+  86   1          while( btUart1SendBusy ); //发送单个字符给UART1以发送到PC机
+  87   1          btUart1SendBusy = 1;
+  88   1          SBUF = dat;
+  89   1      }
+  90          
+  91          /*---------串口1中断处理函数--------*/
+  92          void Uart1_Process() interrupt 4 using 1
+  93          {
+  94   1          if( RI )         //接受完数据后 RI自动制1
+  95   1          {
+  96   2              RI = 0;   ucDateTmp = SBUF;
+  97   2          }
+  98   1          if( TI )        //发送完数据后 RI自动制1
+  99   1          {
+ 100   2              TI = 0;   btUart1SendBusy = 0;
+ 101   2          }
+ 102   1      }
+ 103          
+ 104          /*---------初始化函数--------*/
+ 105          void Init()
+ 106          {
+ 107   1          P3M0 = 0x00;
+ 108   1          P3M1 = 0x00;
+ 109   1          P2M0 = 0xff;
+ 110   1          P2M1 = 0x00;
+ 111   1          P0M0 = 0xff;
+ 112   1          P0M1 = 0x00;
+ 113   1      
+ 114   1          TMOD = 0x01; //定时器0，方式1
+ 115   1          ET0 = 1; //开启定时器中断
+ 116   1          TH0 = ( 65535 - 1000 ) / 256;
+C51 COMPILER V9.51   UART                                                                  04/24/2019 14:59:16 PAGE 3   
+
+ 117   1          TL0 = ( 65535 - 1000 ) % 256;
+ 118   1          TR0 = 1; //启动定时器
+ 119   1      
+ 120   1          Uart1_Init();   //外部中断：低优先级
+ 121   1      
+ 122   1          ucDateTmp = 0x00;
+ 123   1          sbtLedSel = 0;
+ 124   1          btT1msFlag = 0;
+ 125   1      
+ 126   1          /*初始化所有按键的当前状态、前一个状态*/
+ 127   1          btKey1Current = 1; /*key1当前的状态*/
+ 128   1          btKey1Past = 1; /*key1前一个状态*/
+ 129   1          btKey2Current = 1; /*key2当前的状态*/
+ 130   1          btKey2Past = 1; /*key2前一个状态*/
+ 131   1          btKey3Current = 1; /*key3当前的状态*/
+ 132   1          btKey3Past = 1; /*key3前一个状态*/
+ 133   1      
+ 134   1          uiKey1Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+ 135   1          uiKey2Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+ 136   1          uiKey3Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+ 137   1          uiKeyAllCnt = cstKeyMaxNum;
+ 138   1      }
+ 139          
+ 140          /*---------主函数--------*/
+ 141          void main()
+ 142          {
+ 143   1          Init();
+ 144   1          while( 1 )
+ 145   1          {
+ 146   2              if( btT1msFlag )
+ 147   2              {
+ 148   3                  btT1msFlag = 0;
+ 149   3                  if( sbtKey1 == 0 )
+ 150   3                      uiKey1Cnt--;
+ 151   3                  if( sbtKey2 == 0 )
+ 152   3                      uiKey2Cnt--;
+ 153   3                  if( sbtKey3 == 0 ) //按键是按下状态
+ 154   3                      uiKey3Cnt--;
+ 155   3                  uiKeyAllCnt--;//总的次数减1
+ 156   3      
+ 157   3                  if( uiKeyAllCnt == 0 ) //100次完了
+ 158   3                  {
+ 159   4      
+ 160   4                      if( uiKey1Cnt < 0x80 )
+ 161   4                      {
+ 162   5                          btKey1Current = 0;
+ 163   5                          if( btKey1Past == 1 ) //下降沿（按键做动作）
+ 164   5                          {
+ 165   6                              btKey1Past = 0;
+ 166   6                              SendData( ucDateTmp ) ;
+ 167   6                          }
+ 168   5                      }
+ 169   4                      if( uiKey1Cnt >= 0x80 )
+ 170   4                      {
+ 171   5                          btKey1Current = 1;
+ 172   5                          if( btKey1Past == 0 )
+ 173   5                              btKey1Past = 1;  //上升沿（假设不做动作那就继续）
+ 174   5                      }
+ 175   4                      if( uiKey2Cnt < 0x80 )
+ 176   4                      {
+ 177   5                          btKey2Current = 0;
+ 178   5                          if( btKey2Past == 1 ) //下降沿（按键做动作）
+C51 COMPILER V9.51   UART                                                                  04/24/2019 14:59:16 PAGE 4   
+
+ 179   5                          {
+ 180   6                              btKey2Past = 0;
+ 181   6                              ucDateTmp--;
+ 182   6                          }
+ 183   5                      }
+ 184   4                      if( uiKey2Cnt >= 0x80 )
+ 185   4                      {
+ 186   5                          btKey2Current = 1;
+ 187   5                          if( btKey2Past == 0 )
+ 188   5                              btKey2Past = 1;  //上升沿（假设不做动作那就继续）
+ 189   5                      }
+ 190   4      
+ 191   4                      if( uiKey3Cnt < 0x80 )
+ 192   4                      {
+ 193   5                          btKey3Current = 0;
+ 194   5                          if( btKey3Past == 1 ) //下降沿（按键做动作）
+ 195   5                          {
+ 196   6                              btKey3Past = 0;
+ 197   6                              ucDateTmp++;
+ 198   6                          }
+ 199   5                      }
+ 200   4                      if( uiKey3Cnt >= 0x80 )
+ 201   4                      {
+ 202   5                          btKey3Current = 1;
+ 203   5                          if( btKey3Past == 0 )
+ 204   5                              btKey3Past = 1;  //上升沿（假设不做动作那就继续）
+ 205   5                      }
+ 206   4      
+ 207   4                      /*新一轮的判断*/
+ 208   4                      uiKey1Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+ 209   4                      uiKey2Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+ 210   4                      uiKey3Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+ 211   4                      uiKeyAllCnt = cstKeyMaxNum;
+ 212   4                  }
+ 213   3              }
+ 214   2          }
+ 215   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    397    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     27    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      8    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,39 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+D:\Documents\电子系统设计\编程\扫描频率可改变的电子钟(1)\MyClock\clock.uvproj
+Project File Date:  09/10/2019
+
+<h2>Output:</h2>
+compiling main.c...
+main.c(8): warning C318: can't open file 'STC15F2K60S2.h'
+main.c(14): error C202: 'P2': undefined identifier
+main.c(15): error C202: 'P3': undefined identifier
+main.c(46): error C202: 'ledSel': undefined identifier
+main.c(53): error C202: 'P0': undefined identifier
+main.c(54): error C202: 'ledSel': undefined identifier
+main.c(97): error C202: 'P0': undefined identifier
+main.c(107): error C202: 'P0': undefined identifier
+main.c(108): error C202: 'P2': undefined identifier
+main.c(109): error C202: 'P0': undefined identifier
+main.c(120): error C202: 'AUXR': undefined identifier
+main.c(121): error C202: 'TMOD': undefined identifier
+main.c(122): error C202: 'TL0': undefined identifier
+main.c(123): error C202: 'TH0': undefined identifier
+main.c(124): error C202: 'TF0': undefined identifier
+main.c(125): error C202: 'TR0': undefined identifier
+main.c(127): error C202: 'EA': undefined identifier
+main.c(128): error C202: 'ET0': undefined identifier
+main.c(135): error C202: 'P0M0': undefined identifier
+main.c(136): error C202: 'P0M1': undefined identifier
+main.c(137): error C202: 'P2M0': undefined identifier
+main.c(138): error C202: 'P2M1': undefined identifier
+main.c(139): error C202: 'P3M0': undefined identifier
+main.c(140): error C202: 'P3M1': undefined identifier
+main.c(141): error C202: 'P3M0': undefined identifier
+main.c(142): error C202: 'P3M1': undefined identifier
+main.c(143): error C202: 'ledSel': undefined identifier
+main.c(249): error C202: 'key1': undefined identifier
+main.c - 27 Error(s), 1 Warning(s).

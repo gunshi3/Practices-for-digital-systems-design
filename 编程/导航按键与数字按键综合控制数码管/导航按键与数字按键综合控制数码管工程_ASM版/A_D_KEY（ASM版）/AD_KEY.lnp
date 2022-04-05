@@ -1,0 +1,4 @@
+"STARTUP.obj",
+"AD_KEY.obj" 
+TO "AD_KEY" 
+RAMSIZE(256) 

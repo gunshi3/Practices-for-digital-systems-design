@@ -1,0 +1,53 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+D:\4_STC-B案例\16_电子音乐\电子音乐工程\电子音乐_1C版\beep.uvproj
+Project File Date:  07/12/2018
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+compiling beep.c...
+linking...
+Program Size: data=11.0 xdata=0 code=387
+creating hex file from "beep"...
+"beep" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+linking...
+Program Size: data=11.0 xdata=0 code=387
+creating hex file from "beep"...
+"beep" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+compiling beep.c...
+beep.c(44): error C141: syntax error near 'unsigned'
+beep.c(103): error C202: 'arrMusic': undefined identifier
+beep.c(118): error C202: 'arrMusic': undefined identifier
+beep.c(125): error C202: 'arrMusic': undefined identifier
+Target not created
+Rebuild target 'Target 1'
+compiling beep.c...
+beep.c(44): error C141: syntax error near 'unsigned'
+beep.c(103): error C202: 'arrMusic': undefined identifier
+beep.c(118): error C202: 'arrMusic': undefined identifier
+beep.c(125): error C202: 'arrMusic': undefined identifier
+Target not created
+Build target 'Target 1'
+compiling beep.c...
+beep.c(44): error C141: syntax error near 'unsigned'
+beep.c(103): error C202: 'arrMusic': undefined identifier
+beep.c(118): error C202: 'arrMusic': undefined identifier
+beep.c(125): error C202: 'arrMusic': undefined identifier
+Target not created
+Build target 'Target 1'
+compiling beep.c...
+linking...
+Program Size: data=12.0 xdata=0 code=434
+creating hex file from "beep"...
+"beep" - 0 Error(s), 0 Warning(s).
+Rebuild target 'Target 1'
+compiling beep.c...
+linking...
+Program Size: data=12.0 xdata=0 code=434
+creating hex file from "beep"...
+"beep" - 0 Error(s), 0 Warning(s).

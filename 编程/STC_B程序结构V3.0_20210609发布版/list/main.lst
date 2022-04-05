@@ -1,0 +1,79 @@
+C51 COMPILER V9.51   MAIN                                                                  07/14/2021 11:04:38 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\output\main.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE source\main.c BROWSE INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\output\main.obj)
+
+line level    source
+
+   1          #include "STC15F2K60S2.H"
+   2          #include "sys.H" 
+   3          #include "displayer.H" 
+   4          #include "key.h"
+   5          #include "hall.h"
+   6          #include "Vib.h"
+   7          #include "beep.h"
+   8          #include "music.h"
+   9          #include "adc.h"
+  10          #include "uart.h"
+  11          #include "stepmotor.h"
+  12          #include "stdio.h"                            // Keil C51 ¿â£¬Ê¾ÀýÖÐÎªÓ¦ÓÃÆäsprintfº¯Êý
+  13          
+  14          code unsigned long SysClock=11059200L;        //±ØÐë¡£ £¨¶¨ÒåÏµÍ³¹¤×÷Ê±ÖÓÆµÂÊ£¬ÓÃ»§¿ÉÒÔÐÞ¸Ä£¬ÇÒ±ØÐëÓëÊµ¼Ê¹
+             -¤×÷ÆµÂÊ£¨ÏÂÔØÊ±Ñ¡ÔñµÄ£©Ò»ÖÂ
+  15          
+  16          #ifdef _displayer_H_                          //ÏÔÊ¾Ä£¿éÑ¡ÓÃÊ±±ØÐë¡££¨ÊýÂë¹ÜÏÔÊ¾ÒëÂë±í£¬ÓÃ‘ô¿ÉÐÞ¸Ä¡¢Ôö¼ÓµÈ
+             -£© 
+  17          code char decode_table[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x00,0x08,0x40,0x01 };   
+  18                          /* ÐòºÅ:   0   1    2    3    4     5    6    7   8    9   10    11   12   13*        /
+  19                          /* ÏÔÊ¾:   0   1    2    3    4     5    6    7   8    9  (ÎÞ)   ÏÂ-  ÖÐ-  ÉÏ-       */  
+  20          #endif
+  21          
+  22          void my1Sfunc()
+  23          { static i=0;
+  24   1        i++;
+  25   1        LedPrint(i);    
+  26   1      }
+  27          
+  28          void my100mSfunc()
+  29          { 
+  30   1        static unsigned char i;
+  31   1        i++;
+  32   1        Seg7Print(12,10,10,10,10,i/100,(i/10)%10,i%10);              //¾ÙÀý   
+  33   1      }
+  34          
+  35          
+  36          
+  37          void main()
+  38          {         
+  39   1          DisplayerInit();                                 //¾ÙÀý
+  40   1      //  
+  41   1          SetEventCallBack(enumEventSys1S , my1Sfunc);
+  42   1          SetEventCallBack(enumEventSys100mS , my100mSfunc);
+  43   1      //  
+  44   1          SetDisplayerArea(0,7);                           //¾ÙÀý
+  45   1      
+  46   1                                       //¾ÙÀý
+  47   1             MySTC_Init();               //´ËÐÐ±ØÐë£¡£¡£¡   
+  48   1        while(1)                         //´ËÐÐ±ØÐë£¡£¡£¡   
+  49   1          {  MySTC_OS();                 //´ËÐÐ±ØÐë£¡£¡£¡   
+  50   2          }
+  51   1      }
+
+C51 COMPILER V9.51   MAIN                                                                  07/14/2021 11:04:38 PAGE 2   
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     99    ----
+   CONSTANT SIZE    =     18    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

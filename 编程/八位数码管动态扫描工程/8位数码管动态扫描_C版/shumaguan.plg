@@ -1,0 +1,16 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+E:\Little_J\sophomore_summer\实训资料\4_案例工程与测试指导\STC-B案例_学生版\2_八位数码管动态扫描\八位数码管动态扫描工程\8位数码管动态扫描_C版\shumaguan.uvproj
+Project File Date:  08/13/2016
+
+<h2>Output:</h2>
+Build target 'Target 1'
+assembling STARTUP.A51...
+compiling shumaguan.c...
+linking...
+Program Size: data=28.0 xdata=0 code=241
+creating hex file from "shumaguan"...
+"shumaguan" - 0 Error(s), 0 Warning(s).

@@ -1,0 +1,236 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        04/24/2019  15:03:58  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+D:\KEIL\C51\BIN\BL51.EXE 485MC.obj TO 485MC
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  485MC.obj (485MC)
+  D:\KEIL\C51\LIB\C51S.LIB (?C_STARTUP)
+  D:\KEIL\C51\LIB\C51S.LIB (?C_INIT)
+
+
+LINK MAP OF MODULE:  485MC (485MC)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0014H     UNIT         ?DT?485MC
+                    001CH     0004H                  *** GAP ***
+            BIT     0020H.0   0000H.1   UNIT         ?BI?485MC
+                    0020H.1   0000H.7                *** GAP ***
+            IDATA   0021H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0003H     ABSOLUTE     
+            CODE    0006H     0036H     UNIT         ?PR?INIT?485MC
+                    003CH     0007H                  *** GAP ***
+            CODE    0043H     0003H     ABSOLUTE     
+            CODE    0046H     008CH     UNIT         ?C_C51STARTUP
+            CODE    00D2H     002CH     UNIT         ?PR?MAIN?485MC
+            CODE    00FEH     001DH     UNIT         ?PR?UART2_PROCESS?485MC
+            CODE    011BH     0015H     UNIT         ?C_INITSEG
+            CODE    0130H     000DH     UNIT         ?PR?UART2INIT?485MC
+            CODE    013DH     000DH     UNIT         ?PR?DELAY?485MC
+            CODE    014AH     000DH     UNIT         ?PR?EXINT0_PROCESS?485MC
+
+
+
+OVERLAY MAP OF MODULE:   485MC (485MC)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?C_C51STARTUP
+  +--> ?PR?MAIN?485MC
+  +--> ?C_INITSEG
+
+?PR?MAIN?485MC
+  +--> ?PR?INIT?485MC
+  +--> ?PR?DELAY?485MC
+
+?PR?INIT?485MC
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/24/2019  15:03:58  PAGE 2
+
+
+  +--> ?PR?UART2INIT?485MC
+
+
+
+SYMBOL TABLE OF MODULE:  485MC (485MC)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        485MC
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0092H         PUBLIC        P1M0
+  D:0093H         PUBLIC        P0M1
+  D:0096H         PUBLIC        P2M0
+  D:0091H         PUBLIC        P1M1
+  D:0080H         PUBLIC        P0
+  D:00B2H         PUBLIC        P3M0
+  D:0095H         PUBLIC        P2M1
+  D:0090H         PUBLIC        P1
+  D:00B1H         PUBLIC        P3M1
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  D:00C0H         PUBLIC        P4
+  D:00C8H         PUBLIC        P5
+  B:00A8H.7       PUBLIC        EA
+  D:00E8H         PUBLIC        P6
+  D:00F8H         PUBLIC        P7
+  B:00A0H.3       PUBLIC        sbtLedSel
+  B:0020H.0       PUBLIC        btSendBusy
+  D:00BAH         PUBLIC        P_SW2
+  D:00A8H         PUBLIC        IE
+  B:00B0H.7       PUBLIC        sbtM485_TRN
+  C:013DH         PUBLIC        delay
+  C:00FEH         PUBLIC        Uart2_Process
+  C:0006H         PUBLIC        Init
+  D:00B8H         PUBLIC        IP
+  B:00A0H.0       PUBLIC        sbtSel0
+  B:00A0H.1       PUBLIC        sbtSel1
+  B:00A0H.2       PUBLIC        sbtSel2
+  D:00D8H         PUBLIC        CCON
+  C:00D2H         PUBLIC        main
+  B:00B0H.3       PUBLIC        sbtKey2
+  B:0090H.7       PUBLIC        sbtKey3
+  D:0008H         PUBLIC        ucGetDataTmp
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  D:00AFH         PUBLIC        IE2
+  D:008EH         PUBLIC        AUXR
+  D:0009H         PUBLIC        ucPutDataTmp
+  D:00B5H         PUBLIC        IP2
+  D:000AH         PUBLIC        arrSegSelect
+  B:0088H.0       PUBLIC        IT0
+  B:00A8H.0       PUBLIC        EX0
+  D:00D6H         PUBLIC        T2H
+  D:00D7H         PUBLIC        T2L
+  B:00B8H.0       PUBLIC        PX0
+  C:014AH         PUBLIC        ExInt0_Process
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/24/2019  15:03:58  PAGE 3
+
+
+  D:009BH         PUBLIC        S2BUF
+  D:009AH         PUBLIC        S2CON
+  C:0130H         PUBLIC        Uart2Init
+  D:00D0H         PUBLIC        PSW
+  D:0094H         PUBLIC        P0M0
+  -------         PROC          UART2INIT
+  C:0130H         LINE#         46
+  C:0130H         LINE#         47
+  C:0130H         LINE#         48
+  C:0133H         LINE#         49
+  C:0136H         LINE#         50
+  C:0139H         LINE#         51
+  C:013CH         LINE#         52
+  -------         ENDPROC       UART2INIT
+  -------         PROC          INIT
+  C:0006H         LINE#         55
+  C:0006H         LINE#         56
+  C:0006H         LINE#         57
+  C:0009H         LINE#         58
+  C:000CH         LINE#         59
+  C:000FH         LINE#         60
+  C:0011H         LINE#         61
+  C:0013H         LINE#         62
+  C:0015H         LINE#         63
+  C:0017H         LINE#         64
+  C:0019H         LINE#         66
+  C:001BH         LINE#         67
+  C:001DH         LINE#         68
+  C:001FH         LINE#         70
+  C:0021H         LINE#         71
+  C:0024H         LINE#         72
+  C:0027H         LINE#         73
+  C:0029H         LINE#         74
+  C:002CH         LINE#         75
+  C:002FH         LINE#         76
+  C:0031H         LINE#         78
+  C:0033H         LINE#         79
+  C:0035H         LINE#         80
+  C:0037H         LINE#         81
+  C:0039H         LINE#         82
+  C:003BH         LINE#         83
+  -------         ENDPROC       INIT
+  -------         PROC          DELAY
+  -------         DO            
+  D:0007H         SYMBOL        i
+  D:0006H         SYMBOL        j
+  -------         ENDDO         
+  C:013DH         LINE#         86
+  C:013DH         LINE#         87
+  C:013DH         LINE#         89
+  C:013FH         LINE#         90
+  C:0149H         LINE#         92
+  -------         ENDPROC       DELAY
+  -------         PROC          UART2_PROCESS
+  C:00FEH         LINE#         95
+  C:0100H         LINE#         97
+  C:0105H         LINE#         98
+BL51 BANKED LINKER/LOCATER V6.22                                                      04/24/2019  15:03:58  PAGE 4
+
+
+  C:0105H         LINE#         99
+  C:0108H         LINE#         100
+  C:010BH         LINE#         101
+  C:010EH         LINE#         102
+  C:010EH         LINE#         103
+  C:0113H         LINE#         104
+  C:0113H         LINE#         105
+  C:0115H         LINE#         106
+  C:0118H         LINE#         107
+  C:0118H         LINE#         108
+  -------         ENDPROC       UART2_PROCESS
+  -------         PROC          EXINT0_PROCESS
+  C:014AH         LINE#         111
+  C:014AH         LINE#         113
+  C:014CH         LINE#         114
+  C:014FH         LINE#         115
+  C:0152H         LINE#         116
+  C:0154H         LINE#         117
+  C:0156H         LINE#         118
+  -------         ENDPROC       EXINT0_PROCESS
+  -------         PROC          MAIN
+  C:00D2H         LINE#         121
+  C:00D2H         LINE#         122
+  C:00D2H         LINE#         123
+  C:00D5H         LINE#         124
+  C:00D5H         LINE#         125
+  C:00D5H         LINE#         126
+  C:00D8H         LINE#         127
+  C:00E0H         LINE#         129
+  C:00E3H         LINE#         130
+  C:00E3H         LINE#         131
+  C:00E6H         LINE#         132
+  C:00E9H         LINE#         133
+  C:00E9H         LINE#         134
+  C:00ECH         LINE#         135
+  C:00EEH         LINE#         136
+  C:00EEH         LINE#         137
+  C:00EEH         LINE#         138
+  C:00F1H         LINE#         139
+  C:00F1H         LINE#         140
+  C:00F4H         LINE#         141
+  C:00F7H         LINE#         142
+  C:00F7H         LINE#         143
+  C:00FAH         LINE#         144
+  C:00FCH         LINE#         145
+  C:00FCH         LINE#         146
+  C:00FCH         LINE#         147
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        485MC
+
+Program Size: data=29.1 xdata=0 code=336
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

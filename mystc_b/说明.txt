@@ -1,0 +1,3 @@
+program是下位机程序包
+BoxGame是上位机游戏包，内为python工程，box_game_main.py为主文件
+需要pygame、series等库才能运行，下位机进入游戏模式方式为从初始界面按下KEY2

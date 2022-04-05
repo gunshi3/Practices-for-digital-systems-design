@@ -1,0 +1,361 @@
+C51 COMPILER V9.01   MAIN                                                                  11/20/2017 03:21:58 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN MAIN.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE MAIN.C LARGE RTX51 BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "STC15F2K60S2.H"        
+   2          #include "mfrc522.h" 
+   3          #include "main.h"
+   4          
+   5          unsigned char DefaultKey[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; //³õÊ¼ÃÜÂë
+   6          unsigned char code administer_key[6]={0,0,0,0,0,0};//¹ÜÀíÔ±¿¨ÃÜÂë
+   7          unsigned char code this=0x01;
+   8          unsigned char write_Data[16]={0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x07,0x80,0x69,0xff,0xff,0xff,0xff,0xff,0
+             -xff};
+   9          //*********È«¾Ö±äÁ¿¶¨Òå*********************************//
+  10          unsigned char Rec_Buffer[REC_BUFFER_SIZE] = {0};                //´®¿Ú½ÓÊÕ»º³åÇø
+  11          unsigned char Recvd_Count = 0;                          //´®¿ÚÒÑ½ÓÊÕÊý¾ÝµÄ¸öÊý
+  12          bit Uart1_Sendbusy=0;
+  13          unsigned char g_ucTempbuf1[4];  //·µ»Ø¿¨ºÅ      
+  14          unsigned char g_ucTempbuf2[16]; //·µ»Ø¿éÖÐ16Î»Êý¾Ý                     
+  15          
+  16          char PcdReset_flag;                             //³õÊ¼»¯±êÖ¾Î»
+  17          char PcdAntennaOn_flag;                 //´ò¿ªÌìÏß±êÖ¾Î»
+  18          char PcdAntennaOff_flag;                //¹Ø±ÕÌìÏß±êÖ¾Î»
+  19          char PcdRequest_flag;           //Ñ¯¿¨±êÖ¾Î»
+  20          char write_data_flag;                   //Ð´Êý¾Ý±êÖ¾Î»
+  21          char read_date_flag;                    //¶ÁÊý¾Ý±êÖ¾Î»
+  22          char flag1;
+  23                                                                                                                                                                                                                           
+  24          /*****************************************************************************
+  25          *Ô­ÐÍ£ºvoid time0_init(void)
+  26          *¹¦ÄÜ£º¶¨Ê±Æ÷0³õÊ¼»¯
+  27          *input:ÎÞ
+  28          *ouput:ÎÞ
+  29          ÓÃÓÚ¶¨Ê±¼Æ·Ñ
+  30          ******************************************************************************/
+  31          void time0_init(void)
+  32          {
+  33   1              TMOD=0x01;//¶¨Ê±Æ÷0£¬·½Ê½1
+  34   1              ET0=1;//¿ªÆô¶¨Ê±Æ÷ÖÐ¶Ï  
+  35   1              TH0=(65535-1000)/256;
+  36   1              TL0=(65535-1000)%256;
+  37   1              TR0=1;//Æô¶¯¶¨Ê±Æ÷
+  38   1      }
+  39          void timer0() interrupt 1
+  40          {
+  41   1        static uchar overflow=0;
+  42   1        overflow++;
+  43   1        if(overflow == 0xff){
+  44   2      //      overflow = 0;
+  45   2      //      Sent_Byte(1);
+  46   2        }
+  47   1      }
+  48          //-------------------------------- ------------------------------------------------------------------
+  49          // º¯ÊýÃû³Æ£º delay
+  50          // Èë¿Ú²ÎÊý£º N
+  51          // º¯Êý¹¦ÄÜ£ºÑÓÊ±×Ó³ÌÐò£¬ÊµÏÖ(16*N+24)usµÄÑÓÊ± 
+  52          // ÏµÍ³²ÉÓÃ11.0592MHzµÄÊ±ÖÓÊ±,ÑÓÊ±Âú×ãÒªÇó,ÆäËüÇé¿öÐèÒª¸Ä¶¯
+  53          //--------------------------------------------------------------------------------------------------
+  54          void Delay_ms(uint N)       
+C51 COMPILER V9.01   MAIN                                                                  11/20/2017 03:21:58 PAGE 2   
+
+  55          {
+  56   1        uint i,j;
+  57   1        for(j=0;j<1000;j++)
+  58   1          for(i=0;i<=N;i++);
+  59   1      
+  60   1      }
+  61          /*******************************************************************************
+  62          * Function Name  : UART_Init
+  63          * Description    : ³õÊ¼»¯´®ÐÐ¿ÚºÍ²¨ÌØÂÊ·¢ÉúÆ÷(ÓÃ¶¨Ê±Æ÷1) 
+  64          * Input          : None
+  65          * Output         : None
+  66          * Return         : None
+  67          *******************************************************************************/
+  68          void UART_Init(void)
+  69          {
+  70   1          AUXR=0X80;  //¸¨Öú¼Ä´æÆ÷ ´ËÊ±¶¨Ê±Æ÷0µÄËÙ¶ÈÊÇ´«Í³µÄ12±¶£¬²»·ÖÆµ
+  71   1              SCON|=0X50; //ÔÊÐí½ÓÊÕ
+  72   1              TL1=(65536-(Machine_Focs/4/BAUD1));
+  73   1              TH1=(65536-(Machine_Focs/4/BAUD1))>>8;
+  74   1              AUXR|=0X40;     //¸¨Öú¼Ä´æÆ÷ ´ËÊ±¶¨Ê±Æ÷1µÄËÙ¶ÈÊÇ´«Í³µÄ12±¶£¬²»·ÖÆµ
+  75   1              RI=0;            //½ÓÊÕÖÐ¶Ï±êÖ¾Î»
+  76   1              TI=0;            //·¢ËÍÖÐ¶Ï±êÖ¾Î»
+  77   1              TR1=1;           //Æô¶¯¶¨Ê±Æ÷1
+  78   1              ES=1;            //´®¿ÚÖÐ¶ÏÔÊÐíÎ»
+  79   1              EA=1;            //×ÜÖÐ¶ÏÔÊÐíÎ»
+  80   1              PS = 1 ;        //´®¿Ú1ÖÐ¶Ï¸ßÓÅÏÈ¼¶
+  81   1      }
+  82          /*******************************************************************************
+  83          * Function Name  : Sent_Byte
+  84          * Description    : ·¢ËÍÒ»¸ö×Ö½Úµ½Ö÷»ú
+  85          * Input          : Sdata:Òª·¢ËÍµÄ×Ö½Ú
+  86          * Output         : None
+  87          * Return         : None
+  88          *******************************************************************************/
+  89          void Sent_Byte(unsigned char Sdata)
+  90          {
+  91   1              TI = 0;
+  92   1              SBUF=Sdata;
+  93   1              while(TI==0) ;  //µÈ´ýTIÊÇ·ñÎª1£¬TI=1ËµÃ÷·¢ËÍÊý¾ÝÍê³É
+  94   1              TI=0;      //ÊÖ¶¯TIÇåÁã
+  95   1      }
+  96          /*******************************************************************************
+  97          * Function Name  : Sent_String
+  98          * Description    : ·¢ËÍ×Ö½Ú´®µ½Ö÷»ú
+  99          * Input          : pt_send:Òª·¢ËÍµÄ×Ö·û´®
+ 100          * Output         : None
+ 101          * Return         : None
+ 102          *******************************************************************************/
+ 103          void Sent_String(unsigned char *pt_send)
+ 104          {
+ 105   1        TI=0;
+ 106   1        while(*pt_send!='\0')
+ 107   1        {
+ 108   2              Sent_Byte(*pt_send++);
+ 109   2        }
+ 110   1      }
+ 111          /*******************************************************************************
+ 112          * Function Name  : Sent_Buffer
+ 113          * Description    : Ïò´®¿Ú1·¢ËÍÖ¸¶¨³¤¶ÈµÄÊý¾Ý
+ 114          * Input          : string:·¢ËÍ»º³åÇøÖ¸Õë;len:·¢ËÍ³¤¶È.
+ 115          * Output         : None
+ 116          * Return         : None
+C51 COMPILER V9.01   MAIN                                                                  11/20/2017 03:21:58 PAGE 3   
+
+ 117          *******************************************************************************/
+ 118          void Sent_Buffer(uchar *string,uchar len)
+ 119          {
+ 120   1        uchar i;
+ 121   1              ES      =       0;
+ 122   1              for(i=0;i<len;i++)
+ 123   1                 {
+ 124   2                  Sent_Byte(*string++);
+ 125   2             }
+ 126   1              ES      =       1;
+ 127   1      }
+ 128          void Init()
+ 129          {
+ 130   1              P0M1=0x00;        //ÉèÖÃÍÆÍìÊä³ö
+ 131   1          P0M0=0xff;
+ 132   1          P4M0=0xff;
+ 133   1          P4M1=0x00;
+ 134   1          P2M1=0x00;
+ 135   1          P2M0=0x08;
+ 136   1          P0 = 0x00;
+ 137   1              time0_init();    // ¶¨Ê±Æ÷0³õÊ¼»¯
+ 138   1              UART_Init();     // ´®¿Ú³õÊ¼»¯
+ 139   1      
+ 140   1              //MF_RC522´«Êä×ÜÏßÉèÖÃ
+ 141   1              MF522_IIC = 1;        //  ÉèÖÃÎªSPI×ÜÏß´«Êä
+ 142   1              MF522_EA = 0;
+ 143   1      }
+ 144          //********************Ö÷º¯Êý******************************************
+ 145          main()
+ 146          { 
+ 147   1              
+ 148   1          int i = 0;
+ 149   1          uchar status;
+ 150   1              unsigned long int display_data=0;
+ 151   1              Init();
+ 152   1              UART_Init();            //³õÊ¼»¯´®¿Ú
+ 153   1          time0_init();               //³õÊ¼»¯¶¨Ê±Æ÷0,ÒªÔÚ¶ÁmodeÒÔºó
+ 154   1              //³õÊ¼»¯ÉäÆµÐ¾Æ¬
+ 155   1          PcdReset();
+ 156   1              status = ReadRawRC(ModeReg);
+ 157   1              P0 =  status;
+ 158   1              //¹Ø±ÕÌìÏß
+ 159   1          PcdAntennaOff();
+ 160   1              //´ò¿ªÌìÏß
+ 161   1              PcdAntennaOn();  
+ 162   1          Delay_ms(100); 
+ 163   1          while(1)
+ 164   1              {  
+ 165   2                       if(Recvd_Count==1 && Rec_Buffer[0] == 0x40){ //³õÊ¼»¯
+ 166   3                                P0 = 0xf0;
+ 167   3                                PcdReset_flag = Rec_Buffer[0];
+ 168   3                                PcdReset();
+ 169   3                                for(i=0;i<Recvd_Count;++i)
+ 170   3                                      Rec_Buffer[0]=0x00;
+ 171   3                                Recvd_Count=0;
+ 172   3                                PcdReset_flag = -1;                     
+ 173   3                       }        
+ 174   2                       if(Recvd_Count==1 && Rec_Buffer[0] == 0x41){ //Ñ¯¿¨
+ 175   3                                P0 = 0xf0;
+ 176   3                                PcdRequest_flag = Rec_Buffer[0];
+ 177   3                                PcdRequest(PICC_REQALL, g_ucTempbuf1);
+ 178   3                                for(i=0;i<Recvd_Count;++i)
+C51 COMPILER V9.01   MAIN                                                                  11/20/2017 03:21:58 PAGE 4   
+
+ 179   3                                      Rec_Buffer[0]=0x00;
+ 180   3                                Recvd_Count=0;
+ 181   3                                PcdRequest_flag = -1;                   
+ 182   3                       }
+ 183   2                       if(Recvd_Count==1 && Rec_Buffer[0] == 0x42){ //´ò¿ªÌìÏß
+ 184   3                                P0 = 0xf0;
+ 185   3                                PcdAntennaOn_flag = Rec_Buffer[0];
+ 186   3                                PcdAntennaOn();
+ 187   3                                for(i=0;i<Recvd_Count;++i)
+ 188   3                                      Rec_Buffer[0]=0x00;
+ 189   3                                Recvd_Count=0;
+ 190   3                                PcdAntennaOn_flag = -1;                         
+ 191   3                       }
+ 192   2                       if(Recvd_Count==1 && Rec_Buffer[0] == 0x43){ //¹Ø±ÕÌìÏß
+ 193   3                                P0 = 0xf0;
+ 194   3                                PcdAntennaOff_flag = Rec_Buffer[0];
+ 195   3                                PcdAntennaOff();
+ 196   3                                for(i=0;i<Recvd_Count;++i)
+ 197   3                                      Rec_Buffer[0]=0x00;
+ 198   3                                Recvd_Count=0;
+ 199   3                                PcdAntennaOff_flag = -1;                        
+ 200   3                       }
+ 201   2                       //Ñ°¿¨,Êä³öÎª¿¨ÀàÐÍ       
+ 202   2                       status = PcdRequest(PICC_REQALL, g_ucTempbuf1);
+ 203   2                       //*PICC_REQALL=0x52:Ñ°ÌìÏßÇøÄÚËùÓÐ·ûºÏ14443A±ê×¼µÄ¿¨  PICC_REQIDL=0x26:Ö»Ñ°Î´½øÈëÐÝÃß×´Ì¬µÄ¿¨                 
+             -     
+ 204   2               if (status == MI_OK){
+ 205   3                      P0 = 0x01;
+ 206   3                      status = PcdAnticoll(g_ucTempbuf1);  //·À³å×²´¦Àí£¬Êä³ö¿¨Æ¬ÐòÁÐºÅ£¬4×Ö½Ú 
+ 207   3                       }
+ 208   2                       if(status == MI_OK){
+ 209   3                          P0 = 0x02;
+ 210   3                          status = PcdSelect(g_ucTempbuf1);    //Ñ¡Ôñ¿¨Æ¬£¬ÊäÈë¿¨Æ¬ÐòÁÐºÅ£¬4×Ö½Ú
+ 211   3                       }      
+ 212   2                       if(status == MI_OK){           //°üÍ·Îª0xff£¬ËµÃ÷ÊÇ¶ÁÈ¡¿¨ºÅÃüÁî
+ 213   3                          P0 = 0x04;                  
+ 214   3                              if(Recvd_Count==1 && Rec_Buffer[0] == 0xff){   
+ 215   4                                      Sent_Byte(0xff);
+ 216   4                                      Sent_Byte(0x49);
+ 217   4                                      Sent_Byte(0x04);
+ 218   4                                      for(i=0;i<4;i++)
+ 219   4                                      Sent_Byte(g_ucTempbuf1[i]);  //¶ÁÈ¡¿¨ºÅ
+ 220   4                                      for(i=0;i<Recvd_Count;i++)
+ 221   4                                              Rec_Buffer[i]=0x00;
+ 222   4                              Recvd_Count=0;  
+ 223   4                          }   
+ 224   3                              //°üÍ·Îª0xfe£¬ËµÃ÷ÊÇ¶ÁÈ¡¿¨ÖÐÒ»¿éÊý¾Ý   Rec_Buffer[0]Îª°üÍ·0xfe  Rec_Buffer[1]Îª¿éµØÖ·  Rec_Buffer[2~7]Î
+             -ªÃØÔ¿A
+ 225   3                          if(Recvd_Count==8 && Rec_Buffer[0] == 0xfe){  
+ 226   4                                  read_date_flag = 0x11;
+ 227   4                                      if(Rec_Buffer[1]>0x3F){   //×î´ó¿éÎª64¿é  ·ÃÎÊ¿éµØÖ·³¬³ö×î´óÖµ
+ 228   5                                              Sent_Byte(0xfe);Sent_Byte(0x02);
+ 229   5                                      }
+ 230   4                                      else{  //·ÃÎÊ¿éµØÖ·Õý³£
+ 231   5                                              for(i=0;i<6;i++){  //»ñÈ¡ÃØÔ¿
+ 232   6                                                      DefaultKey[i] = Rec_Buffer[i+2];
+ 233   6                                              }
+ 234   5                                              status = PcdAuthState(PICC_AUTHENT1A, Rec_Buffer[1], DefaultKey, g_ucTempbuf1);   //ÑéÖ¤¿¨Æ¬ÃÜÂë
+ 235   5                                                                                       
+ 236   5                                              if(status == MI_OK){ //ÃÜÂëÑéÖ¤ÕýÈ·
+ 237   6                                                      status = PcdRead(Rec_Buffer[1], g_ucTempbuf2);//¶Á¿¨   ·µ»Ø¿éÖÐ16Î»Êý¾Ý 
+ 238   6                                                      if(status == MI_OK){  //¶Á¿¨Êý¾Ý³É¹¦
+C51 COMPILER V9.01   MAIN                                                                  11/20/2017 03:21:58 PAGE 5   
+
+ 239   7                                                              Sent_Byte(0xfe);
+ 240   7                                                              Sent_Byte(0x49);
+ 241   7                                                              Sent_Byte(0x10);
+ 242   7                                                              for(i=0;i<16;i++){
+ 243   8                                                                      Sent_Byte(g_ucTempbuf2[i]);     
+ 244   8                                                              }
+ 245   7                                                      }else{   //¶Á¿¨Êý¾ÝÊ§°Ü
+ 246   7                                                              Sent_Byte(0xfe);Sent_Byte(0x01);
+ 247   7                                                      }
+ 248   6                                              
+ 249   6                                       }else{  //ÃÜÂëÑéÖ¤´íÎó
+ 250   6                                                      Sent_Byte(0xfe);Sent_Byte(0x00);
+ 251   6                                               }
+ 252   5                                 }
+ 253   4                                 for(i=0;i<Recvd_Count;i++)
+ 254   4                                    Rec_Buffer[i]=0x00;
+ 255   4                                 Recvd_Count=0;
+ 256   4                                 read_date_flag = 0x00;       
+ 257   4                              }
+ 258   3                              //°üÍ·Îª0xfd£¬ËµÃ÷ÊÇÐ´¿¨ÖÐÒ»¿éÊý¾Ý   Rec_Buffer[0]Îª°üÍ·0xfd  Rec_Buffer[1]Îª¿éµØÖ·  Rec_Buffer[2~7]ÎªÃ
+             -ØÔ¿A  Rec_Buffer[8~23]ÎªÃØÔ¿A
+ 259   3                              if(Recvd_Count==24 && Rec_Buffer[0] == 0xfd){  
+ 260   4                                      write_data_flag =  0x12;
+ 261   4                                      if(Rec_Buffer[1]>0x3F||((Rec_Buffer[1]>0x04)&&((Rec_Buffer[1]-0x04)%0x03==0))||Rec_Buffer[1]==0x03){  
+             - 
+ 262   5                                          //³¬³ö×î´óµØÖ·¿é»òÕßÏÞÖÆÐÞ¸Ä¿¨ÉÈÇøÃÜÂë
+ 263   5                                              Sent_Byte(0xfd);Sent_Byte(0x02);
+ 264   5                                      }
+ 265   4                                      else{  //·ÃÎÊ¿éµØÖ·Õý³£
+ 266   5                                              for(i=0;i<6;i++){  //»ñÈ¡ÃØÔ¿
+ 267   6                                                      DefaultKey[i] = Rec_Buffer[i+2];
+ 268   6                                              }
+ 269   5                                              status = PcdAuthState(PICC_AUTHENT1A, Rec_Buffer[1], DefaultKey, g_ucTempbuf1);   //ÑéÖ¤¿¨Æ¬ÃÜÂë                                 
+ 270   5                                              //ÃÜÂëÑéÖ¤ÕýÈ·
+ 271   5                                              if(status == MI_OK){
+ 272   6                                                      for(i=0;i<16;i++){  //»ñÈ¡ÒªÐ´ÈëµÄ¿éÊý¾Ý
+ 273   7                                                              write_Data[i] = Rec_Buffer[i+8];
+ 274   7                                                      }
+ 275   6                                                      status=PcdWrite(Rec_Buffer[1],write_Data);   //Ð´Èë¿¨ÖÐÒ»¿éÊý¾Ý
+ 276   6                                                      if(status == MI_OK){  //Ð´Èë¿¨Êý¾Ý³É¹¦
+ 277   7                                                              Sent_Byte(0xfd);Sent_Byte(0xfd);
+ 278   7                                                      }
+ 279   6                                                      else{   //Ð´¿¨Êý¾ÝÊ§°Ü
+ 280   7                                                              Sent_Byte(0xfd);Sent_Byte(0x04);
+ 281   7                                                      }
+ 282   6                                              }
+ 283   5                                      
+ 284   5                                              else{  //ÃÜÂëÑéÖ¤´íÎó
+ 285   6                                                      Sent_Byte(0xfd);Sent_Byte(0x00);
+ 286   6                                              }
+ 287   5                                      }
+ 288   4                                      for(i=0;i<Recvd_Count;i++)
+ 289   4                                      Rec_Buffer[i]=0x00;
+ 290   4                                      Recvd_Count=0;
+ 291   4                                      write_data_flag = 0x00; 
+ 292   4                              }
+ 293   3                      }
+ 294   2                      else{
+ 295   3                              for(i=0;i<Recvd_Count;i++)
+ 296   3                                      Rec_Buffer[i]=0x00;
+ 297   3                              Recvd_Count=0;  
+ 298   3              }
+C51 COMPILER V9.01   MAIN                                                                  11/20/2017 03:21:58 PAGE 6   
+
+ 299   2              }
+ 300   1      }
+ 301          
+ 302          /*******************************************************************************
+ 303          * Function Name  : Serial () 
+ 304          * Description    : ´®¿ÚÖÐ¶Ïº¯Êý
+ 305          * Input          : None
+ 306          * Output         : None
+ 307          * Return         : None
+ 308          *******************************************************************************/
+ 309          
+ 310          void Serial () interrupt  4  using 2
+ 311          {
+ 312   1               if(RI)
+ 313   1               { 
+ 314   2                 RI=0;
+ 315   2             Rec_Buffer[Recvd_Count++]=SBUF;
+ 316   2                 P0 |= 0xf0;
+ 317   2               }
+ 318   1               if(TI)             //·¢ËÍÍêÊý¾Ý TI×Ô¶¯ÖÃ1
+ 319   1               {
+ 320   2                      TI=0;
+ 321   2                      Uart1_Sendbusy=0;
+ 322   2               }
+ 323   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1672    ----
+   CONSTANT SIZE    =      7    ----
+   XDATA SIZE       =     83      13
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

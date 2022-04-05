@@ -1,0 +1,117 @@
+C51 COMPILER V9.01   TONE                                                                  08/11/2016 16:46:02 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE TONE
+OBJECT MODULE PLACED IN tone.OBJ
+COMPILER INVOKED BY: F:\Keil\C51\BIN\C51.EXE tone.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+*** WARNING C500 IN LINE 1 OF TONE.C: LICENSE ERROR (R208: RENEW LICENSE ID CODE (LIC))
+
+   1          #include "STC15F2K60S2.H"   
+   2          #define uchar unsigned char
+   3          #define uint  unsigned int
+   4          #define X 1.05946
+   5          
+   6          sbit beep=P3^4;                                         
+   7          sbit P3_3=P3^3;
+   8          sbit P3_2=P3^2;
+   9          uint y=956;
+  10          uint i=1;
+  11          uchar duanxuan[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71};             //¶ÎÑ
+             -¡ 0-f
+  12          
+  13          
+  14          void delay(uint t)                                 //ÑÓÊ±º¯Êý  ÑÓÊ±tms
+  15          {
+  16   1              uint j;  
+  17   1              for(;t>0;t--)   
+  18   1              for(j=800;j>0;j--) 
+  19   1                      ;                                                               
+  20   1      }
+  21          
+  22          void int0() interrupt 0                           
+  23          {
+  24   1          EX0=0;                                                                //¹Ø±ÕÍâ²¿ÖÐ¶Ï0
+  25   1              delay(10);                                                        //Ïû¶¶
+  26   1              if(P3_2==0)
+  27   1              {                                                                         //µ±°´ÏÂk1Ê±£¬¸Ä±ä¶ÎÑ¡Óë¶¨Ê±Æ÷0µÄ³õÊ¼Öµ´Ó¶ø¸Ä±äÊäÈëµ½·äÃùÆ÷µÄ·½²¨ÆµÂÊ
+  28   2                  if(i==7)                                              //Ñ­»·Êä³öÒôµ÷1-7
+  29   2                      {y=956;
+  30   3                       P0=duanxuan[1];
+  31   3                       i=1;
+  32   3                       }
+  33   2                      else if(i==3)                                   
+  34   2                      {y=y/X;i++;P0=duanxuan[i];}
+  35   2                      else
+  36   2                      {y=y/X/X;i++;P0=duanxuan[i];}
+  37   2              }
+  38   1              while(!P3_2);                                            //ÖÐ¶Ï¼ì²âÉ¨Ãè¼üÅÌ
+  39   1              EX0=1;                                                           //¿ªÆôÍâ²¿ÖÐ¶Ï0
+  40   1      }
+  41          
+  42          void int1() interrupt 2                                                 
+  43          {
+  44   1              EX1=0;                                                     //¹Ø±ÕÍâ²¿ÖÐ¶Ï1
+  45   1          delay(10);                                             //Ïû¶¶
+  46   1              if(P3_3==0)
+  47   1              {
+  48   2                      if(TR0)
+  49   2                              {TR0=0;beep=0;}                   //Èô¶¨Ê±Æ÷0¿ªÆôÔò¹Ø±Õ
+  50   2                      else
+  51   2                              {TR0=1;}                                  //Èô¶¨Ê±Æ÷0¹Ø±ÕÔò¿ªÆô
+  52   2              }
+  53   1              while(!P3_3);                                     //ÖÐ¶Ï¼ì²âÉ¨Ãè¼üÅÌ
+C51 COMPILER V9.01   TONE                                                                  08/11/2016 16:46:02 PAGE 2   
+
+  54   1              EX1=1;                                                    //¿ªÆôÍâ²¿ÖÐ¶Ï1
+  55   1      }
+  56          
+  57          void timer0() interrupt 1
+  58          {
+  59   1              beep=~beep;
+  60   1              TH0=(65536-y)/256;                                //Òôµ÷²»Í¬£¬¶¨Ê±Æ÷³õÊ¼Öµ²»Í¬
+  61   1              TL0=(65536-y)%256;
+  62   1      } 
+  63          
+  64          main()
+  65          {
+  66   1              P3M0=0x10;                                //ÍÆÍìÊä³ö
+  67   1              P3M1=0x00;
+  68   1              P2M0=0x0f;
+  69   1              P2M1=0x00;
+  70   1              P1M0=0xff;
+  71   1              P1M1=0x00;
+  72   1              TMOD=0x01;                                                //¶¨Ê±Æ÷0Î»1·½Ê½¹¤×÷
+  73   1              TH0=(65536-y)/256;
+  74   1              TL0=(65536-y)%256;
+  75   1              EA=1;                             //ÖÐ¶Ï×Ü¿ª¹Ø
+  76   1              ET0=1;                                                    //¶¨Ê±Æ÷0¿ªÆô
+  77   1              TR0=1;
+  78   1              EX1=1;
+  79   1              IT1=1;                                                    //Íâ²¿ÖÐ¶Ï¿ªÆô
+  80   1              EX0=1;
+  81   1              IT0=1;
+  82   1              IP=0x05;
+  83   1              beep=0;
+  84   1              P2=0x07;                                                  //Î»Ñ¡ÉèÎª×îÓÒ±ßÒ»Î»
+  85   1              P0=duanxuan[1];                                   
+  86   1              while(1)
+  87   1              {
+  88   2              }
+  89   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    524    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     20    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,168 @@
+C51 COMPILER V9.51   ULTRASONIC                                                            08/15/2015 15:14:47 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE ULTRASONIC
+OBJECT MODULE PLACED IN Ultrasonic.OBJ
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE Ultrasonic.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include "STC15F2K60S2.H" 
+   2          
+   3          /**************************
+   4          引脚别名定义如下：
+   5          **************************/
+   6          sbit SEL0=P2^0;
+   7          sbit SEL1=P2^1;
+   8          sbit SEL2=P2^2;
+   9          sbit SEL3=P2^3;
+  10          sbit Echo=P1^0;           //发送
+  11          sbit Trig=P1^1;           //接收
+  12          
+  13          /**************************
+  14          定义变量如下：
+  15          **************************/
+  16          #define uint unsigned int
+  17          float TIME;               //一个周期的时间
+  18          float receive;
+  19          uint receiveint;          //距离
+  20          char qianwei=0;
+  21          char baiwei=0;
+  22          char shiwei=0;
+  23          char gewei=0;
+  24          char global=0;
+  25          
+  26          char segtable[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x71};
+  27          
+  28          void SEG_Display();
+  29          void date_process();
+  30          void Delay(int n);
+  31          
+  32          /**********************
+  33          函数名称：void ultr()
+  34          功能描述：利用超声波模块HC-SR04把测得的距离显示在数码管上
+  35          ***********************/
+  36          void main()
+  37          {
+  38   1        TIME=12/11.0592;            //寄存器AUXR中T1x12=0,12分频
+  39   1      
+  40   1        P0M1=0x00;                  //推挽
+  41   1        P0M0=0xff;
+  42   1        P2M1=0x00;
+  43   1        P2M0=0x08;  
+  44   1        SEL3=0;
+  45   1      
+  46   1        TMOD=0x11;                  //同时使用定时器T0和T1
+  47   1      
+  48   1        EA=1;                       //打开总的中断
+  49   1        ET1=1;                      //开启定时器1中断 
+  50   1        TH1=(65535-60000)/256;      //60ms
+  51   1        TL1=(65535-60000)%256;    
+  52   1        TR1=1;                      //启动定时器
+  53   1      
+  54   1        while(1)
+  55   1        {
+C51 COMPILER V9.51   ULTRASONIC                                                            08/15/2015 15:14:47 PAGE 2   
+
+  56   2         SEG_Display();
+  57   2        }
+  58   1      }
+  59          
+  60          //定义定时器1中断，用于每隔至少60ms发一次信号
+  61          void Timer1_Routine() interrupt 3
+  62          {
+  63   1        global++;
+  64   1        if(global>10)
+  65   1        {
+  66   2          ET1=0;                     //关闭T1中断
+  67   2          TR1=0;                     //关闭定时器1
+  68   2          TH1=(65535-60000)/256;
+  69   2          TL1=(65535-60000)%256;    //重新赋值
+  70   2          
+  71   2          Trig=1;       
+  72   2          Delay(2);                 //生成20us的脉冲宽度的触发信号
+  73   2          Trig=0;
+  74   2      
+  75   2          while(!Echo);             //等待回响信号变高电平
+  76   2          TR0=1;                    //启动定时器0
+  77   2          
+  78   2          while(Echo);              //等待回响信号变低电平
+  79   2          TR0=0;                    //关闭定时器0
+  80   2          
+  81   2          //通过晶振频率，传播时间和声音传播速度可以测得距离
+  82   2          receive=(340*TIME*((float)TH0*256+(float)TL0))/2000;
+  83   2          receiveint=(int)receive;
+  84   2          if(receiveint<30||receiveint>4000)
+  85   2          { 
+  86   3            receiveint=0;
+  87   3          }
+  88   2          date_process();
+  89   2        
+  90   2          TH0=0;                    //定时器0赋值0
+  91   2          TL0=0;
+  92   2      
+  93   2          ET1=1;                    //打开定时器T1
+  94   2          TR1=1;
+  95   2          global=0;
+  96   2        }
+  97   1      }
+  98          
+  99          void date_process()
+ 100          {
+ 101   1        qianwei=receiveint/1000;
+ 102   1        baiwei=receiveint%1000/100;
+ 103   1        shiwei=receiveint%100/10;
+ 104   1        gewei=receiveint%10;  
+ 105   1      }
+ 106          void weixuan(char i)
+ 107          {
+ 108   1        SEL2=i/4;
+ 109   1        SEL1=i%4/2;
+ 110   1        SEL0=i%2;
+ 111   1      }
+ 112          void SEG_Display()
+ 113          {
+ 114   1        P0=0;
+ 115   1        weixuan(4);
+ 116   1        P0=segtable[qianwei];
+ 117   1        Delay(30);
+C51 COMPILER V9.51   ULTRASONIC                                                            08/15/2015 15:14:47 PAGE 3   
+
+ 118   1        P0=0;
+ 119   1        weixuan(5);
+ 120   1        P0=segtable[baiwei];
+ 121   1        Delay(30);
+ 122   1        P0=0;
+ 123   1        weixuan(6);
+ 124   1        P0=segtable[shiwei];
+ 125   1        Delay(30);
+ 126   1        P0=0;
+ 127   1        weixuan(7);
+ 128   1        P0=segtable[gewei];
+ 129   1        Delay(30);
+ 130   1        
+ 131   1      }
+ 132          
+ 133          void Delay(int n)
+ 134          {
+ 135   1        int x;
+ 136   1        while(n--)
+ 137   1        {
+ 138   2          x=50;
+ 139   2          while(x--);
+ 140   2        }
+ 141   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    518    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     30    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,616 @@
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE REALTIMECLOCK
+OBJECT MODULE PLACED IN realtimeclock.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE realtimeclock.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /**********************
+   2          ÎÄ¼þÃû³Æ£ºrealtimeclock.c
+   3          ×÷Õß£º
+   4          ËµÃ÷£º½øÐÐÊµÊ±Ê±ÖÓÄ£¿é²âÊÔµÄÀý³Ì
+   5          ²ÉÓÃ¶¨Ê±Æ÷0£¬·½Ê½1Í¨¹ýÊýÂë¹Ü¶ÔÊ±¼ä½øÐÐÏÔÊ¾²¢½øÐÐÊ±·ÖÃëµÄÐÞ¸Ä
+   6          ÐÞ¸Ä¼ÇÂ¼£º
+   7          ***********************/
+   8          /**********************
+   9          »ùÓÚSTC15F2K60S2ÏµÁÐµ¥Æ¬»úCÓïÑÔ±à³ÌÊµÏÖ
+  10          Ê¹ÓÃÈçÏÂÍ·ÎÄ¼þ£¬²»ÓÃÁíÍâÔÙ°üº¬"REG51.H"
+  11          ***********************/
+  12          #include"STC15F2K60S2.H" //Í·ÎÄ¼þ
+  13          #include"intrins.H" //Í·ÎÄ¼þ
+  14          #include"ctype.h"
+  15          #define uchar unsigned char        //ºê¶¨Òå
+  16          #define uint unsigned int
+  17          #define ADC_CHS1_7 0X07
+  18          /***********Ê±·ÖÃëÐ´¼Ä´æÆ÷**************/
+  19          #define DS1302_SECOND_WRITE 0x80                        
+  20          #define DS1302_MINUTE_WRITE 0x82
+  21          #define DS1302_HOUR_WRITE   0x84 
+  22          #define DS1302_WEEK_WRITE   0x8A
+  23          #define DS1302_DAY_WRITE    0x86
+  24          #define DS1302_MONTH_WRITE  0x88
+  25          #define DS1302_YEAR_WRITE   0x8C
+  26          #define ADC_POWER 0X80
+  27          #define ADC_FLAG 0X10  /*µ±A/D×ª»»Íê³Éºó£¬ADC_FLAGÒªÈí¼þÇåÁã*/
+  28          #define ADC_START 0X08
+  29          #define ADC_SPEED_90 0X60
+  30          /***********Ê±·ÖÃë¶Á¼Ä´æÆ÷**************/
+  31          #define DS1302_SECOND_READ  0x81
+  32          #define DS1302_MINUTE_READ  0x83
+  33          #define DS1302_HOUR_READ    0x85 
+  34          #define DS1302_WEEK_READ    0x8B
+  35          #define DS1302_DAY_READ     0x87
+  36          #define DS1302_MONTH_READ   0x89
+  37          #define DS1302_YEAR_READ    0x8D
+  38          #define P1_7_ADC 0x80
+  39          /*Ê±¡¢·Ö¡¢Ãë±êÖ¾*/
+  40          bit set_H_flag;
+  41          bit set_Ms_flag;
+  42          bit set_S_flag;
+  43          
+  44          /*Ê±¡¢·Ö¡¢ÃëÖµ*/
+  45          uint set_H_val;
+  46          uint set_Ms_val;
+  47          uint set_S_val;
+  48          
+  49          bit set_HMS_done;  //Ê±·ÖÃëÉèÖÃÍê
+  50          bit show_set_HMS;  //ÏÔÊ¾Ê±·ÖÃë
+  51          bit show_HMS;  //ÏÔÊ¾Ê±·ÖÃë
+  52          bit show_key_val;
+  53          unsigned char key_val;
+  54          
+  55          /**********************
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 2   
+
+  56          Òý½Å±ðÃû¶¨Òå
+  57          ***********************/
+  58          /********DS1302*******/
+  59          sbit Rtc_sclk = P1^5;                   //Ê±ÖÓÏßÒý½Å,¿ØÖÆÊý¾ÝµÄÊäÈëÓëÊä³ö
+  60          sbit Rtc_rst  = P1^6;                   //CEÏßÒý½Å,¶Á¡¢Ð´Êý¾ÝÊ±±ØÐëÖÃÎª¸ßµçÆ½
+  61          sbit Rtc_io   = P5^4;                   //ÊµÊ±Ê±ÖÓµÄÊý¾ÝÏßÒý½Å
+  62          /********ÊýÂë¹ÜÏÔÊ¾******/
+  63          sbit Led_sel = P2^3;               //Á÷Ë®µÆºÍÊýÂë¹ÜÑ¡Í¨Òý½Å
+  64          sbit Sel0    = P2^0;               //Sel0¡¢Sel1¡¢Sel2ÈýÎ»¶þ½øÖÆ½øÐÐÊýÂë¹ÜÎ»Ñ¡0-7        
+  65          sbit Sel1    = P2^1;
+  66          sbit Sel2    = P2^2;
+  67          sbit KEY1=P3^2;                           //Key1
+  68          /**********************
+  69          ±äÁ¿¶¨Òå
+  70          ***********************/
+  71          uchar duanxuan[]={                                        //ÊýÂë¹ÜÏÔÊ¾ËùÒªÓÃµÄ¶ÎÂë
+  72           
+  73                          0x3F,  //"0"
+  74                          0x06,  //"1"
+  75                          0x5B,  //"2"
+  76                          0x4F,  //"3"
+  77                          0x66,  //"4"
+  78                          0x6D,  //"5"
+  79                          0x7D,  //"6"
+  80                          0x07,  //"7"
+  81                          0x7F,  //"8"
+  82                          0x6F,  //"9"
+  83                          0x77,  //"A"
+  84                          0x7C,  //"B"
+  85                          0x39,  //"C"
+  86                          0x5E,  //"D"
+  87                          0x79,  //"E"
+  88                          0x71,  //"F"
+  89                          0x76,  //"H"
+  90                          0x38,  //"L"
+  91                          0x37,  //"n"
+  92                          0x3E,  //"u"
+  93                          0x73,  //"P"
+  94                          0x5C,  //"o"
+  95                          0x40,  //"-"
+  96                          0x00,  //Ï¨Ãð
+  97                          0x00  //×Ô¶¨Òå
+  98           
+  99                          };
+ 100          
+ 101          uchar weixuan[]={0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07};         //ÊýÂë¹ÜÎ»Ñ¡Êý×é
+ 102          uchar flag;                                      //ËùÑ¡ÔñµãÁÁµÄÊýÂë¹Ü0-7±êÖ¾Î»
+ 103          uchar temp;                                      //ÒªÐ´Èëµ½DS1302µÄÊý¾Ý
+ 104          /*******************************
+ 105           * º¯ÊýÃû£ºDelayms
+ 106           * ÃèÊö  £ººÁÃëÑÓÊ±³ÌÐò
+ 107           * ÊäÈë  £ºÑÓÊ±iºÁÃë
+ 108           * Êä³ö  £ºÎÞ
+ 109           *******************************/
+ 110          void Delayms(char i)                    
+ 111          {
+ 112   1              while(i--)
+ 113   1              {       
+ 114   2                      int n=500;
+ 115   2                      while (n--)
+ 116   2                  {
+ 117   3                      _nop_();
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 3   
+
+ 118   3                      _nop_();
+ 119   3                      _nop_();
+ 120   3                      _nop_();
+ 121   3                      _nop_();
+ 122   3                              _nop_();
+ 123   3                  }
+ 124   2              }
+ 125   1      }
+ 126          /**********************
+ 127          ¶¨ÒåÊ±¼ä½á¹¹Ìå
+ 128          ***********************/
+ 129          typedef struct __SYSTEMTIME__
+ 130          {
+ 131                  uchar Second;
+ 132                  uchar Minute;
+ 133                  uchar Hour;
+ 134                  uchar Week;
+ 135                  uchar Day;
+ 136                  uchar Month;
+ 137                  uchar Year;
+ 138          }SYSTEMTIME;                    //¶¨ÒåµÄÊ±¼äÀàÐÍ
+ 139          SYSTEMTIME t;                   
+ 140          /**********************
+ 141          º¯ÊýÃû³Æ£ºDs1302_write
+ 142          ¹¦ÄÜÃèÊö£ºDs1302Ð´ÈëÒ»×Ö½Ú
+ 143          Èë¿Ú²ÎÊý£ºuchar ÒªÐ´ÈëµÄÊý¾Ý 
+ 144          ***********************/
+ 145          void Ds1302_write(uchar temp)            //temp:ÒªÐ´ÈëµÄÊý¾Ý
+ 146          {
+ 147   1              uchar i;
+ 148   1              for(i=0;i<8;i++)                                 //Ñ­»·8´ÎÐ´ÈëÒ»¸ö×Ö½Ú
+ 149   1              {
+ 150   2                      Rtc_sclk=0;                                     //Ê±ÖÓÂö³åÀ­µÍ
+ 151   2                      Rtc_io=(bit)(temp&0x01);         //È¡×îµÍÎ»Êý¾Ý
+ 152   2                      temp>>=1;                                        //ÓÒÒÆÒ»Î»
+ 153   2                      Rtc_sclk=1;                                       //ÉÏÉýÑØÊäÈë  
+ 154   2              }
+ 155   1      }
+ 156          
+ 157          /**********************
+ 158          º¯ÊýÃû³Æ£ºDs1302_read
+ 159          ¹¦ÄÜÃèÊö£ºDs1302¶ÁÈ¡Ò»×Ö½Ú
+ 160          Èë¿Ú²ÎÊý£ºÎÞ
+ 161          ³ö¿Ú²ÎÊý£º·µ»Øuchar ¶Á³öµÄÊý¾Ý
+ 162          ***********************/
+ 163          uchar Ds1302_read()      
+ 164          {
+ 165   1               uchar i, dat;
+ 166   1               for(i=0;i<8;i++)                       
+ 167   1               {
+ 168   2                      Rtc_sclk=0;                             //Ê±ÖÓÂö³åÀ­µÍ  
+ 169   2                      dat>>=1;                                //Òª·µ»ØµÄÊý¾ÝÓÒÒÆÒ»Î»   
+ 170   2                      if(Rtc_io==1)                   //Êý¾ÝÏßÎª¸ß£¬Ö¤Ã÷¸ÃÎ»Êý¾ÝÎª1
+ 171   2                      dat|=0x80;                              //Òª´«ÊäÊý¾ÝµÄµ±Ç°ÖµÖÃÎª1£¬Èô²»ÊÇ£¬ÔòÎª0
+ 172   2                      Rtc_sclk=1;                             //À­¸ßÊ±ÖÓÏß 
+ 173   2               }
+ 174   1               return dat;                            //·µ»Ø¶ÁÈ¡³öµÄÊý¾Ý
+ 175   1      }
+ 176          
+ 177          
+ 178          /**********************
+ 179          º¯ÊýÃû³Æ£ºWriteDS1302
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 4   
+
+ 180          ¹¦ÄÜÃèÊö£ºÏòAddr¶ÔÓ¦µÄ¼Ä´æÆ÷ÖÐÐ´ÈëÊý¾ÝData
+ 181          Èë¿Ú²ÎÊý£ºuchar Addr ¼Ä´æÆ÷µØÖ·, uchar Data ÒªÐ´Èë¼Ä´æÆ÷µÄÊý¾Ý
+ 182          ***********************/
+ 183          void WriteDS1302(uchar Addr, uchar Data)           //Addr: DS1302µØÖ·,Data: ÒªÐ´µÄÊý¾Ý
+ 184          {
+ 185   1          Rtc_rst = 0;                                                 //³õÊ¼CEÏßÖÃ0
+ 186   1          Rtc_sclk = 0;                                                //³õÊ¼Ê±ÖÓÏßÖÃ0
+ 187   1          Rtc_rst = 1;                                                 //³õÊ¼CEÏßÖÃÎª1£¬´«Êä¿ªÊ¼
+ 188   1              Ds1302_write(Addr);                                      // µØÖ·£¬´«ÊäÃüÁî×Ö
+ 189   1              Ds1302_write(Data);                                      // Ð´1ByteÊý¾Ý 
+ 190   1              Rtc_rst = 0;                                             //¶ÁÈ¡½áÊø£¬CEÖÃ0£¬½áÊøÊý¾ÝµÄ´«Êä
+ 191   1          Rtc_sclk = 1;                                                //Ê±ÖÓÏßÀ­¸ß
+ 192   1      }
+ 193          
+ 194          /**********************
+ 195          º¯ÊýÃû³Æ£ºReadDS1302
+ 196          ¹¦ÄÜÃèÊö£º¶Á³öAddr¶ÔÓ¦µÄ¼Ä´æÆ÷ÖÐµÄÊý¾Ý
+ 197          Èë¿Ú²ÎÊý£ºuchar cmd ¼Ä´æÆ÷µØÖ·
+ 198          ***********************/
+ 199          uchar ReadDS1302(uchar cmd)
+ 200          {
+ 201   1          uchar Data;
+ 202   1          Rtc_rst = 0;                          //³õÊ¼CEÏßÖÃÎª0
+ 203   1          Rtc_sclk = 0;                         //³õÊ¼Ê±ÖÓÏßÖÃÎª0
+ 204   1          Rtc_rst = 1;                          //³õÊ¼CEÖÃÎª1£¬´«Êä¿ªÊ¼
+ 205   1          Ds1302_write(cmd);        // µØÖ·£¬´«ÊäÃüÁî×Ö 
+ 206   1          Data =Ds1302_read();      // ¶Á1ByteÊý¾Ý      
+ 207   1              Rtc_rst = 0;                      //¶ÁÈ¡½áÊø£¬CEÖÃÎª0£¬½áÊøÊý¾ÝµÄ´«Êä
+ 208   1          Rtc_sclk = 1;                         //Ê±ÖÓÏßÀ­¸ß
+ 209   1          return Data;                          //·µ»ØµÃµ½µÄÊý¾Ý
+ 210   1      }
+ 211          
+ 212          /**********************
+ 213          º¯ÊýÃû³Æ£ºDS1302_GetTime_BCD
+ 214          ¹¦ÄÜÃèÊö£º¶Á³öDS1302ÖÐÊ±¡¢·Ö¡¢Ãë¡¢Äê¡¢ÔÂ¡¢ÈÕ¼Ä´æÆ÷ÖÐ¶ÔÓ¦µÄÊý¾Ý
+ 215          ***********************/
+ 216          
+ 217          SYSTEMTIME DS1302_GetTime()
+ 218          {
+ 219   1              SYSTEMTIME Time;
+ 220   1              uchar ReadValue;
+ 221   1              ReadValue = ReadDS1302(DS1302_SECOND_READ);
+ 222   1              //½«BCDÂë×ª»»³ÉÊ®½øÖÆÁË
+ 223   1              Time.Second=((ReadValue&0x70)>>4)*10 + (ReadValue&0x0F);                  //¶ÁÈ¡Ãë¼Ä´æÆ÷ÖÐµÄÊý¾Ý
+ 224   1              ReadValue=ReadDS1302(DS1302_MINUTE_READ);
+ 225   1              Time.Minute = ((ReadValue&0x70)>>4)*10 + (ReadValue&0x0F);                //¶ÁÈ¡·Ö¼Ä´æÆ÷ÖÐµÄÊý¾Ý
+ 226   1              ReadValue = ReadDS1302(DS1302_HOUR_READ);
+ 227   1              Time.Hour = ((ReadValue&0x70)>>4)*10 + (ReadValue&0x0F);                  //¶ÁÈ¡Ê±¼Ä´æÆ÷ÖÐµÄÊý¾Ý
+ 228   1              ReadValue = ReadDS1302(DS1302_DAY_READ);
+ 229   1              Time.Day = ((ReadValue&0x70)>>4)*10 + (ReadValue&0x0F);                   //¶ÁÈ¡ÈÕ¼Ä´æÆ÷ÖÐµÄÊý¾Ý
+ 230   1              ReadValue = ReadDS1302(DS1302_WEEK_READ);
+ 231   1              Time.Week = ((ReadValue&0x70)>>4)*10 + (ReadValue&0x0F);                  //¶ÁÈ¡ÖÜ¼Ä´æÆ÷ÖÐµÄÊý¾Ý
+ 232   1              ReadValue = ReadDS1302(DS1302_MONTH_READ);
+ 233   1              Time.Month = ((ReadValue&0x70)>>4)*10 + (ReadValue&0x0F);                 //¶ÁÈ¡ÔÂ¼Ä´æÆ÷ÖÐµÄÊý¾Ý
+ 234   1              ReadValue = ReadDS1302(DS1302_YEAR_READ);
+ 235   1              Time.Year=((ReadValue&0x70)>>4)*10 + (ReadValue&0x0F);                    //¶ÁÈ¡Äê¼Ä´æÆ÷ÖÐµÄÊý¾Ý
+ 236   1      
+ 237   1              return Time;
+ 238   1      }
+ 239          
+ 240          /**********************
+ 241          º¯ÊýÃû³Æ£ºInit
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 5   
+
+ 242          ¹¦ÄÜÃèÊö£ºÍê³É¸÷²¿·Ö¹¦ÄÜÄ£¿éµÄ³õÊ¼»¯
+ 243          Èë¿Ú²ÎÊý£ºÎÞ 
+ 244          ³ö¿Ú²ÎÊý£ºÎÞ
+ 245          ±¸×¢£º
+ 246          ***********************/
+ 247          void Init()
+ 248          {       P3=0xEF;                                  //¹Ø·äÃùÆ÷
+ 249   1              P2M0=0xff;                               //ÉèÖÃÍÆÍìÄ£Ê½
+ 250   1              P2M1=0x00;
+ 251   1          P0M0=0xff;
+ 252   1          P0M1=0x00;
+ 253   1              Led_sel=0;                               //Ñ¡Í¨ÊýÂë¹Ü
+ 254   1      
+ 255   1              TMOD=0x01;                              //¶¨Ê±Æ÷0£¬·½Ê½1
+ 256   1              EA=1;                                   //´ò¿ª×ÜµÄÖÐ¶Ï
+ 257   1              ET0=1;                                  //¿ªÆô¶¨Ê±Æ÷ÖÐ¶Ï        
+ 258   1              TH0=(65535-1000)/256;   //ÉèÖÃ¶¨Ê±³õÖµ
+ 259   1              TL0=(65535-1000)%256;
+ 260   1              TR0=1;                                  //Æô¶¯¶¨Ê±Æ÷
+ 261   1      }
+ 262          void Init_key()
+ 263          {
+ 264   1              /*Ê±¡¢·Ö¡¢ÃëÖµ*/
+ 265   1              set_H_val=7;
+ 266   1              set_Ms_val=8;
+ 267   1              set_S_val=9;
+ 268   1              set_HMS_done=0;  //Ê±·ÖÃëÉèÖÃÍê
+ 269   1              /*Ê±¡¢·Ö¡¢Ãë±êÖ¾*/
+ 270   1              set_H_flag=0;
+ 271   1              set_Ms_flag=0;
+ 272   1              set_S_flag=0;
+ 273   1              /*Ä¬ÈÏÏÔÊ¾Ê±¡¢·Ö¡¢Ãë±êÖ¾*/
+ 274   1              show_HMS=1;
+ 275   1              show_set_HMS=0;
+ 276   1              show_key_val=0;
+ 277   1              key_val=0x00;
+ 278   1      //      P3M0=0x10;                         //ÉèÖÃÍÆÍìÄ£Ê½        ·äÃùÆ÷²»ÓÃÍÆÍì
+ 279   1      //      P3M1=0x00;
+ 280   1      //      P1M0=0x00;
+ 281   1      //      P1M1=0x00;
+ 282   1      }
+ 283          /**************************************
+ 284           * º¯ÊýÃû£ºGetADC
+ 285           * ÃèÊö  £º»ñµÃAD×ª»»µÄÖµ,Ã»ÓÐÉèÖÃA/D×ª»»ÖÐ¶Ï£¨¾ßÌå¿´IE¡¢IP£©
+ 286           * ÊäÈë  £ºÎÞ
+ 287           * Êä³ö  £ºAD×ª»»µÄ½á¹û
+ 288           **************************************/
+ 289          unsigned char GetADC()
+ 290          {
+ 291   1              unsigned char result;
+ 292   1              ADC_CONTR = ADC_POWER | ADC_START | ADC_SPEED_90 | ADC_CHS1_7;//Ã»ÓÐ½«ADC_FLAGÖÃ1£¬ÓÃÓÚÅÐ¶ÏA/DÊÇ·ñ½áÊø
+ 293   1              _nop_();
+ 294   1              _nop_();
+ 295   1              _nop_();
+ 296   1              _nop_();
+ 297   1              while(!(ADC_CONTR&ADC_FLAG));//µÈ´ýÖ±µ½A/D×ª»»½áÊø
+ 298   1              ADC_CONTR &= ~ADC_FLAG; //ADC_FLAGEÈí¼þÇå0
+ 299   1              result = ADC_RES; //»ñÈ¡ADµÄÖµ
+ 300   1              return result;    //·µ»ØADCÖµ
+ 301   1      }
+ 302          
+ 303          /********************************
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 6   
+
+ 304           * º¯ÊýÃû£ºFun_Keycheck()          
+ 305           * ÃèÊö  £º¼ì²â¹¦ÄÜ¼üµÄÉÏ5¡¢ÏÂ2¡¢×ó4¡¢ÓÒ1¡¢È·ÈÏ¼ü3¡¢¿ª¹Ø°´¼ü3£¨0£©£¬Ã»°´ÏÂ·µ»Ø0x07£¬·µ»ØÏàÓ¦µÄÖµ  (°üº¬Ïû¶
+             -¶¹ý³Ì)
+ 306           * ÊäÈë  £ºÎÞ
+ 307           * Êä³ö  £º¼ü¶ÔÓ¦µÄÖµ
+ 308          ********************************/
+ 309          unsigned char Fun_Keycheck()
+ 310          {
+ 311   1              unsigned char key;
+ 312   1              key=GetADC();             //»ñµÃADCÖµ¸³Öµ¸økey
+ 313   1              if(key!=255)
+ 314   1              {
+ 315   2                      Delayms(1);
+ 316   2                      key=GetADC();
+ 317   2                      if(key!=255)      //°´¼üÏû¶¶
+ 318   2                      {
+ 319   3                      key=key&0xE0;//»ñÈ¡¸ß3Î»£¬ÆäËûÎ»ÇåÁã
+ 320   3                      key=_cror_(key,5);//Ñ­»·ÓÒÒÆ5Î»
+ 321   3                              return key;
+ 322   3                      }
+ 323   2              }
+ 324   1              return 0x07;
+ 325   1      }
+ 326          
+ 327          /**********************
+ 328          º¯ÊýÃû³Æ£ºFun_Key_task_HMS
+ 329          ¹¦ÄÜÃèÊö£º¼àÌý¹¦ÄÜ¼ü£¬Íê³ÉÊ±·ÖÃëÏà¹ØÖµµÄÉèÖÃ£¬×ó¶ÔÓ¦Ê±¡¢ÓÐ¶ÔÓ¦Ãë¡¢È·ÈÏ¶ÔÓ¦·Ö£»
+ 330                            ÉÏ¶ÔÓ¦Öµ¼Ó1¡¢ÏÂ¶ÔÓ¦Öµ¼õ1
+ 331          Èë¿Ú²ÎÊý£ºÎÞ 
+ 332          ³ö¿Ú²ÎÊý£ºÎÞ
+ 333          ***********************/
+ 334          void Fun_Key_task_HMS()
+ 335          {
+ 336   1              key_val=Fun_Keycheck();
+ 337   1              switch(key_val)    
+ 338   1              {
+ 339   2                      case 0x05:
+ 340   2                      if(set_H_flag)//Ð¡Ê±¼Ó1
+ 341   2                      set_H_val=(set_H_val+1)%24;
+ 342   2                      if(set_Ms_flag)//·ÖÖÓ¼Ó1
+ 343   2                      set_Ms_val=(set_Ms_val+1)%60;
+ 344   2                      if(set_S_flag)//ÃëÖÓ¼Ó1
+ 345   2                      set_S_val=(set_S_val+1)%60;
+ 346   2                      break;  //ÉÏ  ¼Ó
+ 347   2                  case 0x02:
+ 348   2                      if(set_H_flag)//Ð¡Ê±¼õ1
+ 349   2                      set_H_val=(set_H_val>0)?set_H_val-1:23;
+ 350   2                      if(set_Ms_flag)//·ÖÖÓ¼õ1
+ 351   2                      set_Ms_val=(set_Ms_val>0)?set_Ms_val-1:59;
+ 352   2                      if(set_S_flag)//ÃëÖÓ¼õ1
+ 353   2                      set_S_val=(set_S_val>0)?set_S_val-1:59;
+ 354   2                      break;  //ÏÂ  ¼õ
+ 355   2                      case 0x04:
+ 356   2                      {
+ 357   3                              set_H_flag=1;
+ 358   3                              set_S_flag=0;
+ 359   3                              set_Ms_flag=0;
+ 360   3                      }
+ 361   2                      break;  //×ó   Ê±
+ 362   2                  case 0x01:
+ 363   2                      {
+ 364   3                              set_S_flag=1;
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 7   
+
+ 365   3                              set_H_flag=0;
+ 366   3                              set_Ms_flag=0;
+ 367   3                      }
+ 368   2                      break;  //ÓÒ      Ãë
+ 369   2                      case 0x03:
+ 370   2                      {
+ 371   3                              set_Ms_flag=1;
+ 372   3                              set_H_flag=0;
+ 373   3                              set_S_flag=0;
+ 374   3                      }
+ 375   2                      break;  //È·ÈÏ ·Ö
+ 376   2                      default:break;    
+ 377   2              }
+ 378   1      }
+ 379          /**********************
+ 380          º¯ÊýÃû³Æ£ºFun_key1
+ 381          ¹¦ÄÜÃèÊö£º¼àÌý°´¼ü1£¬Íê³ÉÊ±·ÖÃëÉèÖÃ
+ 382          Èë¿Ú²ÎÊý£ºÎÞ 
+ 383          ³ö¿Ú²ÎÊý£ºÎÞ
+ 384          ***********************/
+ 385          void Fun_key1()
+ 386          {
+ 387   1              if(KEY1==0)// °´¼ü2¿ØÖÆÊ±·ÖÃëµÄÉèÖÃ
+ 388   1              {                       
+ 389   2                      Delayms(5);
+ 390   2                      while(!KEY1); //Ïû¶¶
+ 391   2                      
+ 392   2                      set_HMS_done=0;
+ 393   2                      show_set_HMS=1;  //ÏÔÊ¾Ê®·ÖÃë
+ 394   2      
+ 395   2                      show_HMS=0;
+ 396   2      
+ 397   2                      /*Ä¬ÈÏÉèÖÃ·Ö*/
+ 398   2                      set_H_flag=0;                              //ÉèÖÃÊ±¼äÊ±Ä¬ÈÏÉèÖÃ·ÖÖÓ
+ 399   2                      set_Ms_flag=1;
+ 400   2                      set_S_flag=0;
+ 401   2      
+ 402   2                      set_H_val=t.Hour;                               //°Ñ´ËÊ±µÄÊ±¼ä×÷ÎªÉèÖÃÊ±¼äµÄÄ¬ÈÏÖµ
+ 403   2                      set_Ms_val=t.Minute;
+ 404   2                      set_S_val=t.Second;     
+ 405   2      
+ 406   2                      while(1)
+ 407   2                      {
+ 408   3      
+ 409   3                              if(KEY1==0)
+ 410   3                              {
+ 411   4                                      Delayms(5);
+ 412   4                                      while(!KEY1);                                   //°´¼üÏû¶¶
+ 413   4                                      set_H_flag=0;
+ 414   4                                      set_Ms_flag=0;
+ 415   4                                      set_S_flag=0;
+ 416   4                                      set_HMS_done=1;                            //Ê±¼äÉèÖÃÍê³É
+ 417   4                                      break;                                             //ÍË³öÊ±¼äÉèÖÃ
+ 418   4                              }
+ 419   3                              else
+ 420   3                              {
+ 421   4                                      Fun_Key_task_HMS();                        //½øÈëÉèÖÃÑ¡Ïî
+ 422   4                                      while(key_val!=0x07)
+ 423   4                                      {
+ 424   5                                              key_val=Fun_Keycheck();
+ 425   5                                      }
+ 426   4                              }
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 8   
+
+ 427   3                      }
+ 428   2              }
+ 429   1      }
+ 430          /**********************
+ 431          º¯ÊýÃû³Æ£ºKey_OFFON
+ 432          ¹¦ÄÜÃèÊö£ºÉèÖÃÊ±·ÖÃë£¬½øÐÐÊ±¼äµÄÐ£×¼¡£
+ 433          Èë¿Ú²ÎÊý£ºÎÞ 
+ 434          ³ö¿Ú²ÎÊý£ºÎÞ
+ 435          ***********************/
+ 436          void Key_OFFON()
+ 437          {
+ 438   1              uchar temp,dtime;
+ 439   1              uchar table_D_BCD[]={0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09};
+ 440   1              t=DS1302_GetTime();
+ 441   1      
+ 442   1          key_val=Fun_Keycheck();
+ 443   1              if(key_val==0x03)
+ 444   1              {
+ 445   2                      while(key_val==0x03)
+ 446   2                      {
+ 447   3                              key_val=Fun_Keycheck();
+ 448   3                      }
+ 449   2                      set_HMS_done=0;
+ 450   2              
+ 451   2              }
+ 452   1              if(set_HMS_done) //Íê³ÉÉèÖÃ ¶ÔÓ¦Ð£Ê±¹¦ÄÜ
+ 453   1              {                               
+ 454   2                      show_set_HMS=0;                 
+ 455   2                      show_HMS=1;//ÏÔÊ¾Ê±·ÖÃë 
+ 456   2                      WriteDS1302(0x8E,0x00);  //½ûÖ¹Ð´±£»¤Î»
+ 457   2                      temp=ReadDS1302(DS1302_SECOND_READ)|0x80;
+ 458   2                      WriteDS1302(0x80,temp);//¾§ÕñÍ£Ö¹¹¤×÷
+ 459   2                      /*Ð´ÈëÊ±¡¢·Ö¡¢ÃëÖµ*/     
+ 460   2                      dtime=(table_D_BCD[set_S_val/10]<<4)|table_D_BCD[set_S_val%10]; 
+ 461   2                      WriteDS1302(DS1302_SECOND_WRITE,dtime);
+ 462   2                      dtime=(table_D_BCD[set_Ms_val/10]<<4)|table_D_BCD[set_Ms_val%10];
+ 463   2                      WriteDS1302(DS1302_MINUTE_WRITE,dtime);
+ 464   2                      dtime=(table_D_BCD[set_H_val/10]<<4)|table_D_BCD[set_H_val%10]; 
+ 465   2                      WriteDS1302(DS1302_HOUR_WRITE,dtime);
+ 466   2                      WriteDS1302(0x8E,0x80); //Ð´±£»¤Î»ÖÃ1
+ 467   2                      set_HMS_done = 0;
+ 468   2              }
+ 469   1      }
+ 470          
+ 471          void Initial_DS1302(void)       
+ 472          {       unsigned char hour,min,sec;
+ 473   1      //    unsigned char code DataStr[]=__DATE__;      //¸ñÊ½: "Jan 13 2017"   12×Ö·û£¨º¬½áÊø·û£©
+ 474   1          unsigned char code DataStr[]=__TIME__;        //¸ñÊ½£º"09:12:04"      9×Ö·û£¨º¬½áÊø·û£©
+ 475   1      
+ 476   1          hour=((toint(DataStr[0]))<<4)+toint(DataStr[1]);
+ 477   1              min=((toint(DataStr[3]))<<4)+toint(DataStr[4]);
+ 478   1              sec=((toint(DataStr[6]))<<4)+toint(DataStr[7]);
+ 479   1      
+ 480   1          WriteDS1302(0x8E,0x00);                      //½ûÖ¹Ð´±£»¤Î» 
+ 481   1              WriteDS1302(DS1302_SECOND_WRITE,sec);
+ 482   1              WriteDS1302(DS1302_MINUTE_WRITE,min);
+ 483   1              WriteDS1302(DS1302_HOUR_WRITE,hour);
+ 484   1              
+ 485   1              temp=ReadDS1302(DS1302_SECOND_READ)&0x7f ;
+ 486   1              WriteDS1302(0x80,temp);                 //¾§Õñ¿ªÊ¼¹¤×÷
+ 487   1      //      WriteDS1302(0x90,0xa9);         //  ³äµçÉèÖÃ£ºÔÊÐí³äµç£¬2¸ö¶þ¼«¹Ü£¬2Kµç×è               
+ 488   1              WriteDS1302(0x8E,0x80);                  //Ð´±£»¤Î»ÖÃ1                                           
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 9   
+
+ 489   1      }
+ 490                  
+ 491          void set_charge_DS1302()
+ 492          {  WriteDS1302(0x8E,0x00);                       //½ûÖ¹Ð´±£»¤Î»
+ 493   1         WriteDS1302(0x90,0xa9);         //  ³äµçÉèÖÃ£ºÔÊÐí³äµç£¬2¸ö¶þ¼«¹Ü£¬2Kµç×è            
+ 494   1         WriteDS1302(0x8E,0x80);                       //Ð´±£»¤Î»ÖÃ1
+ 495   1      }
+ 496          /********************************¶¨Ê±Æ÷ÖÐ¶Ï´¦Àí³ÌÐò************************************************/
+ 497          void timer0() interrupt 1         //°ÑÊýÂë¹ÜµÄÏÔÊ¾Ìáµ½ÖÐ¶ÏÀïÃæÀ´ÁË
+ 498           {
+ 499   1              TH0=(65535-1000)/256;     //ÖØÐÂÌî³ä³õÖµ
+ 500   1              TL0=(65535-1000)%256;
+ 501   1      
+ 502   1              /********ÏÔÊ¾³ÌÐò*******/
+ 503   1              flag++;                                           
+ 504   1              if(flag==8)                                       
+ 505   1              flag=0;
+ 506   1              P0=0x00;                                                           
+ 507   1              P2=weixuan[flag];
+ 508   1              if(show_HMS)
+ 509   1              {  //ÏÔÊ¾¸ñÊ½14-23-54£¨14µã23·Ö54Ãë£©
+ 510   2                      switch(flag){
+ 511   3                      case 0:P0=duanxuan[t.Hour/10];break; 
+ 512   3                  case 1:P0=duanxuan[t.Hour%10];break; 
+ 513   3                      case 3:P0=duanxuan[t.Minute/10];break; 
+ 514   3                      case 4:P0=duanxuan[t.Minute%10];break; 
+ 515   3                      case 6:P0=duanxuan[t.Second/10];break; 
+ 516   3                      case 7:P0=duanxuan[t.Second%10];break; 
+ 517   3                      default:P0=duanxuan[22];break;
+ 518   3                      }
+ 519   2              }
+ 520   1              if(show_set_HMS)
+ 521   1              {  //ÏÔÊ¾¸ñÊ½14-23-54£¨14µã23·Ö54Ãë£©
+ 522   2                      switch(flag){
+ 523   3                      case 0:P0=duanxuan[set_H_val/10];break; 
+ 524   3                      case 1:P0=(set_H_flag==1)?duanxuan[set_H_val%10]|0x80:duanxuan[set_H_val%10];break; 
+ 525   3                      case 3:P0=duanxuan[set_Ms_val/10];break; 
+ 526   3                      case 4:P0=(set_Ms_flag==1)?duanxuan[set_Ms_val%10]|0x80:duanxuan[set_Ms_val%10];break; 
+ 527   3                      case 6:P0=duanxuan[set_S_val/10];break; 
+ 528   3                      case 7:P0=(set_S_flag==1)?duanxuan[set_S_val%10]|0x80:duanxuan[set_S_val%10];break;  
+ 529   3                      default:P0=duanxuan[22];break;
+ 530   3                      }
+ 531   2              }
+ 532   1              if(show_key_val)
+ 533   1              {
+ 534   2                      switch(flag){
+ 535   3                      case 0:P0=duanxuan[key_val/10];break; 
+ 536   3                      case 1:P0=duanxuan[key_val%10];break; 
+ 537   3                      default:P0=duanxuan[22];break;
+ 538   3                      }
+ 539   2              }
+ 540   1      }
+ 541          /**********************************
+ 542           * º¯ÊýÃû£ºInit_ADC
+ 543           * ÃèÊö  £º³õÊ¼»¯P1.7¿ÚÎªADC
+ 544           * ÊäÈë  £ºÎÞ
+ 545           * Êä³ö  £ºÎÞ
+ 546           **********************************/
+ 547          void Init_ADC()
+ 548          {
+ 549   1              P1ASF=P1_7_ADC;//½«P1ASF¼Ä´æÆ÷¶ÔÓ¦Î»ÖÃ1
+ 550   1              ADC_RES = 0;//½á¹û¼Ä´æÆ÷ÇåÁã
+C51 COMPILER V9.51   REALTIMECLOCK                                                         04/15/2020 23:32:49 PAGE 10  
+
+ 551   1      //      ADC_RESL=0;
+ 552   1              ADC_CONTR = ADC_POWER | ADC_FLAG | ADC_START | ADC_SPEED_90 | ADC_CHS1_7;               //¶ÔÓ¦Î»¸³Öµ
+ 553   1              Delayms(2);
+ 554   1      }
+ 555          
+ 556          void main()
+ 557          {
+ 558   1              Init();                                                                                          //ÏµÍ³³õÊ¼»¯
+ 559   1              Init_ADC();                                                                                      //ADC³õÊ¼»¯
+ 560   1              Init_key();                                                                                      //°´¼ü³õÊ¼»¯
+ 561   1              if (ReadDS1302(DS1302_SECOND_READ)&0x80)                          //ÅÐ¶ÏµôµçÖ®ºóÊ±ÖÓÊÇ·ñ»¹ÔÚÔËÐÐ
+ 562   1              Initial_DS1302();                                                                         //ÈôÕýÔÚÔËÐÐ£¬Ôò½øÐÐDS1302³õÊ¼»¯
+ 563   1              set_charge_DS1302();
+ 564   1              while(1)
+ 565   1              {
+ 566   2                      Delayms(200);                                                             //ÑÓÊ±È¡Öµ£¬¼õÉÙÈ¡Öµ´ÎÊý
+ 567   2                      t=DS1302_GetTime();                                                       //´ÓDS1302È¡ÖµËÍ¸ø½á¹¹Ìåt
+ 568   2                      Fun_key1();                                                                               
+ 569   2                      Key_OFFON();                    
+ 570   2                      if (ReadDS1302(DS1302_SECOND_READ)&0x80)        
+ 571   2                      Initial_DS1302();                                                        //È¡Ê±¼ä¸÷Êý¾Ý·Åµ½½á¹¹ÌåtÖÐ
+ 572   2              }       
+ 573   1      
+ 574   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1510    ----
+   CONSTANT SIZE    =     19    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     49      21
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      7    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

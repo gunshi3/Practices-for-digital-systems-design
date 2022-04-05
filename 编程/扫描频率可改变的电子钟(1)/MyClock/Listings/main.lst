@@ -1,0 +1,311 @@
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:53:49 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(
+                    -.\Objects\main.obj)
+
+line level    source
+
+   1          //
+   2          // Created by Hasee on 7/11/2019.
+   3          //
+   4          /**
+   5           * 扫描频率的电子钟
+   6           * @author: 吴剑兵
+   7           */
+   8          #include "STC15F2K60S2.h"
+*** WARNING C318 IN LINE 8 OF main.c: can't open file 'STC15F2K60S2.h'
+   9          #include "intrins.h"
+  10          
+  11          #define uint unsigned int
+  12          #define uchar unsigned char
+  13          #define i1 interrupt 1
+  14          sbit ledSel = P2 ^3;    // led or digital tube
+*** ERROR C202 IN LINE 14 OF main.c: 'P2': undefined identifier
+  15          sbit key1 = P3 ^2; //控制数码管扫描频率
+*** ERROR C202 IN LINE 15 OF main.c: 'P3': undefined identifier
+  16          uchar baseSevenSegment[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66,
+  17                                      0x6d, 0x7d, 0x07, 0x7f, 0x6f}; //七段码
+  18          unsigned char const line = 0x40; //横杠的七段码
+  19          char timeAddOneFlag = 0;    //标记为1，此时需要秒+1
+  20          char key1ActionFlag = 0;     //值为1时表示按键操作需要执行
+  21          unsigned int ledOnFlag = 0; //led灯亮
+  22          char tubeOnFlag = 0;        //数码管亮
+  23          int ledValue = 1;           //led显示的数值
+  24          int myDisplay[8] = {0};     //数码管显示的内容
+  25          unsigned int timeCount = 1; //时间计时器
+  26          unsigned int currHour = 0;
+  27          unsigned int currMinute = 0;
+  28          unsigned int currSecond = 0;
+  29          unsigned int interruptCount = 0;
+  30          unsigned int keyDownTime = 0;
+  31          unsigned int scanTime = 1;  //扫描时间
+  32          unsigned int currBit = 0;   //当前显示的位
+  33          void Delay5us()       //@11.0592MHz
+  34          {
+  35   1          unsigned char i;
+  36   1      
+  37   1          _nop_();
+  38   1          i = 11;
+  39   1          while (--i);
+  40   1      }
+  41          
+  42          /**
+  43           * 设置ledSel,转为数码管显示
+  44          */
+  45          void switchToTube() {
+  46   1          ledSel = 0;
+*** ERROR C202 IN LINE 46 OF main.c: 'ledSel': undefined identifier
+  47   1      }
+  48          
+  49          /**
+  50           * 设置ledSel,转为led设置
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:53:49 PAGE 2   
+
+  51           */
+  52          void switchToLed() {
+  53   1          P0 = 0;
+*** ERROR C202 IN LINE 53 OF main.c: 'P0': undefined identifier
+  54   1          ledSel = 1;
+*** ERROR C202 IN LINE 54 OF main.c: 'ledSel': undefined identifier
+  55   1      }
+  56          
+  57          /**
+  58           * 改变其中一位的内容
+  59           *
+  60           * @param bitNum 位数（第几位）（例如最左那位，则调用1）
+  61           * @param value 改变后的数字，需确保大于0小于10
+  62           */
+  63          void change1Bit(int bitNum, int value) {
+  64   1          myDisplay[bitNum - 1] = baseSevenSegment[value];
+  65   1      }
+  66          
+  67          /**
+  68           * 改变其中一位的内容（设置七段码）
+  69           *
+  70           * @param bitNum 位数（第几位）（例如最左那位，则调用1）
+  71           * @param sevenSegCode 目标七段码
+  72           */
+  73          void change1Bit_seven(int bitNum, int sevenSegCode) {
+  74   1          myDisplay[bitNum - 1] = sevenSegCode;
+  75   1      }
+  76          
+  77          /**
+  78           * 数码管设置为显示指定的数值
+  79           *
+  80           * @param num 数字
+  81           */
+  82          void changeAll(long num) {
+  83   1          int i;
+  84   1          for (i = 7; i >= 0; --i) {
+  85   2              int foo = num % 10;
+  86   2              myDisplay[i] = baseSevenSegment[foo];
+  87   2              num /= 10;
+  88   2          }
+  89   1      }
+  90          
+  91          /**
+  92           * led亮
+  93           */
+  94          void displayLed() {
+  95   1          if (ledOnFlag) {
+  96   2              switchToLed();
+  97   2              P0 = ledValue;
+*** ERROR C202 IN LINE 97 OF main.c: 'P0': undefined identifier
+  98   2          }
+  99   1      }
+ 100          
+ 101          /**
+ 102           * 显示数码管
+ 103           */
+ 104          void showTube() {
+ 105   1          if (tubeOnFlag) {
+ 106   2              switchToTube();
+ 107   2              P0 = 0;
+*** ERROR C202 IN LINE 107 OF main.c: 'P0': undefined identifier
+ 108   2              P2 = currBit;
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:53:49 PAGE 3   
+
+*** ERROR C202 IN LINE 108 OF main.c: 'P2': undefined identifier
+ 109   2              P0 = myDisplay[currBit];
+*** ERROR C202 IN LINE 109 OF main.c: 'P0': undefined identifier
+ 110   2              Delay5us();
+ 111   2          }
+ 112   1      }
+ 113          
+ 114          /**
+ 115           * 初始化定时器
+ 116           */
+ 117          void timer0Initialize()        //0.1毫秒@12MHz
+ 118          {
+ 119   1      
+ 120   1          AUXR |= 0x80;        //定时器时钟1T模式
+*** ERROR C202 IN LINE 120 OF main.c: 'AUXR': undefined identifier
+ 121   1          TMOD &= 0xF0;        //设置定时器模式
+*** ERROR C202 IN LINE 121 OF main.c: 'TMOD': undefined identifier
+ 122   1          TL0 = 0xAE;        //设置定时器初值
+*** ERROR C202 IN LINE 122 OF main.c: 'TL0': undefined identifier
+ 123   1          TH0 = 0xFB;        //设置定时器初值
+*** ERROR C202 IN LINE 123 OF main.c: 'TH0': undefined identifier
+ 124   1          TF0 = 0;        //清除TF0标志
+*** ERROR C202 IN LINE 124 OF main.c: 'TF0': undefined identifier
+ 125   1          TR0 = 1;        //定时器0开始计时
+*** ERROR C202 IN LINE 125 OF main.c: 'TR0': undefined identifier
+ 126   1      
+ 127   1          EA = 1; //打开总的中断
+*** ERROR C202 IN LINE 127 OF main.c: 'EA': undefined identifier
+ 128   1          ET0 = 1; //打开定时器0中断
+*** ERROR C202 IN LINE 128 OF main.c: 'ET0': undefined identifier
+ 129   1      }
+ 130          
+ 131          /**
+ 132           * ???
+ 133           */
+ 134          void initialize() {
+ 135   1          P0M0 = 0xFF;
+*** ERROR C202 IN LINE 135 OF main.c: 'P0M0': undefined identifier
+ 136   1          P0M1 = 0x00;
+*** ERROR C202 IN LINE 136 OF main.c: 'P0M1': undefined identifier
+ 137   1          P2M0 = 0x0f; //设置P2.0-3为推挽工作状态
+*** ERROR C202 IN LINE 137 OF main.c: 'P2M0': undefined identifier
+ 138   1          P2M1 = 0x00;
+*** ERROR C202 IN LINE 138 OF main.c: 'P2M1': undefined identifier
+ 139   1          P3M0 = 0x00;
+*** ERROR C202 IN LINE 139 OF main.c: 'P3M0': undefined identifier
+ 140   1          P3M1 = 0x00;
+*** ERROR C202 IN LINE 140 OF main.c: 'P3M1': undefined identifier
+ 141   1          P3M0 = 0x00;
+*** ERROR C202 IN LINE 141 OF main.c: 'P3M0': undefined identifier
+ 142   1          P3M1 = 0x00;
+*** ERROR C202 IN LINE 142 OF main.c: 'P3M1': undefined identifier
+ 143   1          ledSel = 0;
+*** ERROR C202 IN LINE 143 OF main.c: 'ledSel': undefined identifier
+ 144   1      
+ 145   1          timer0Initialize();
+ 146   1          changeAll(0);
+ 147   1          /*
+ 148   1           * 第三位和第六位设置为 '-'
+ 149   1           */
+ 150   1          change1Bit_seven(3, line);
+ 151   1          change1Bit_seven(6, line);
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:53:49 PAGE 4   
+
+ 152   1      }
+ 153          
+ 154          /**
+ 155           * 时间自增1秒
+ 156           */
+ 157          void addTime() {
+ 158   1          ++currSecond;
+ 159   1          if (currSecond == 60) {
+ 160   2              ++currMinute;
+ 161   2              currSecond = 0;
+ 162   2              if (currMinute == 60) {
+ 163   3                  ++currHour;
+ 164   3                  currMinute = 0;
+ 165   3                  if (currHour == 24)
+ 166   3                      currHour = 0;
+ 167   3                  change1Bit(2, currHour % 10);
+ 168   3                  change1Bit(1, currHour / 10);
+ 169   3              }
+ 170   2              change1Bit(5, currMinute % 10);
+ 171   2              change1Bit(4, currMinute / 10);
+ 172   2          }
+ 173   1          change1Bit(8, currSecond % 10);
+ 174   1          change1Bit(7, currSecond / 10);
+ 175   1      }
+ 176          
+ 177          /**
+ 178           * 按下key1要做的事
+ 179           */
+ 180          void key1Action() {
+ 181   1          if (key1ActionFlag) {
+ 182   2              if (ledValue == 0x80)
+ 183   2                  ledValue = 0x01;
+ 184   2              else
+ 185   2                  ledValue <<= 1;
+ 186   2              if (ledValue == 1)
+ 187   2                  scanTime = 1;
+ 188   2              else if (ledValue == 2)
+ 189   2                  scanTime = 50;
+ 190   2              else if (ledValue == 4)
+ 191   2                  scanTime = 100;
+ 192   2              else if (ledValue == 8)
+ 193   2                  scanTime = 200;
+ 194   2              else if (ledValue == 16)
+ 195   2                  scanTime = 500;
+ 196   2              else if (ledValue == 32)
+ 197   2                  scanTime = 1000;
+ 198   2              else if (ledValue == 64)
+ 199   2                  scanTime = 2000;
+ 200   2              else if (ledValue == 128)
+ 201   2                  scanTime = 5000;
+ 202   2              key1ActionFlag = 0;
+ 203   2          }
+ 204   1      }
+ 205          
+ 206          /**
+ 207           * 收到中断的信号（是时候自增时间了）
+ 208           */
+ 209          void timeSignalHandler() {
+ 210   1          if (timeAddOneFlag) {
+ 211   2              addTime();
+ 212   2              timeAddOneFlag = 0;
+ 213   2          }
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:53:49 PAGE 5   
+
+ 214   1      }
+ 215          
+ 216          /**
+ 217           * 单片机运行
+ 218           */
+ 219          void run() {
+ 220   1          while (1) {
+ 221   2              timeSignalHandler();
+ 222   2              displayLed();
+ 223   2              showTube();
+ 224   2              key1Action();
+ 225   2          }
+ 226   1      }
+ 227          
+ 228          /**
+ 229           * 每0.1毫秒进入一次定时器中断
+ 230           */
+ 231          void interruptFunction() i1 {
+ 232   1          static const int KEY_TIME_THRESHOLD = 500;
+ 233   1          interruptCount = (interruptCount + 1) % 20000;
+ 234   1          //led显示的频率应该低些才有好的显示效果
+ 235   1          if (interruptCount % 12 > 10) {
+ 236   2              ledOnFlag = 1;
+ 237   2              tubeOnFlag = 0;
+ 238   2          } else {
+ 239   2              tubeOnFlag = 1;
+ 240   2              ledOnFlag = 0;
+ 241   2          }
+ 242   1          // 数码管的扫描
+ 243   1          if (interruptCount % scanTime == 0)
+ 244   1              currBit = (currBit + 1) % 8;
+ 245   1          //读秒
+ 246   1          if (interruptCount % 10000 == 0)
+ 247   1              timeAddOneFlag = 1;
+ 248   1          // 按键功能设置
+ 249   1          if (key1 == 0) {
+*** ERROR C202 IN LINE 249 OF main.c: 'key1': undefined identifier
+ 250   2              if (keyDownTime < KEY_TIME_THRESHOLD)
+ 251   2                  ++keyDownTime;
+ 252   2          } else {
+ 253   2              if (keyDownTime >= KEY_TIME_THRESHOLD)
+ 254   2                  key1ActionFlag = 1;
+ 255   2              keyDownTime = 0;
+ 256   2          }
+ 257   1      }
+ 258          
+ 259          int main() {
+ 260   1          initialize();
+ 261   1          run();
+ 262   1          return 0;
+ 263   1      }
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  27 ERROR(S)

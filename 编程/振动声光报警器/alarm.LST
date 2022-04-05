@@ -1,0 +1,146 @@
+C51 COMPILER V9.00   ALARM                                                                 08/19/2015 16:11:03 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE ALARM
+OBJECT MODULE PLACED IN alarm.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE alarm.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /**********************
+   2          文件名称：alarm.c
+   3          作者：
+   4          说明：进行振动声光报警器测试的例程,振动发生时，将点亮LED和蜂鸣器将发声
+   5          修改记录：
+   6          ***********************/
+   7          
+   8          /**********************
+   9          基于STC15F2K60S2系列单片机C语言编程实现
+  10          使用如下头文件，不用另外再包含"REG51.H"
+  11          ***********************/
+  12          #include <STC15F2K60S2.h>                         //包含头文件
+  13          
+  14          #define uint unsigned int                         //宏定义
+  15          #define uchar unsigned char
+  16          
+  17          /****************************
+  18          引脚定义
+  19          ****************************/
+  20          sbit vibrate=P2^4;                  //振动传感器
+  21          sbit led_sel=P2^3;                      //数码管与LED灯切换引脚
+  22          sbit beep = P3^4;                       //蜂鸣器引脚
+  23          sbit key1 = P3^2;                       //key1开关引脚
+  24          
+  25          /*****************************
+  26          变量定义
+  27          *****************************/
+  28          uchar flag;                               //振动标志位
+  29          uchar code table[]={0x00,0x01,0x03,0x07,0x0f,0x1f,0x3f,0x7f,0xff};              //流水灯报警闪烁数组
+  30          /**********************
+  31          函数名称：void delay()
+  32          功能描述：延时
+  33          入口参数：xms：输入延时时间
+  34          出口参数：无
+  35          备注：
+  36          
+  37          ***********************/
+  38          void delay(unsigned int xms)
+  39          {
+  40   1              uint i,j;                                                  
+  41   1               for(i=xms;i>0;i--)
+  42   1                      for(j=100;j>0;j--);
+  43   1      }
+  44          
+  45          /**********************
+  46          函数名称：void init_sys()
+  47          功能描述：系统初始化，功能是配置IO口
+  48          入口参数：无
+  49          出口参数：无
+  50          备注：
+  51          
+  52          ***********************/
+  53          void init_sys()                   
+  54          {
+  55   1              P0M0=0xff;                                                              //设置推挽模式
+C51 COMPILER V9.00   ALARM                                                                 08/19/2015 16:11:03 PAGE 2   
+
+  56   1              P0M1=0x00;
+  57   1              P2M0=0x08;
+  58   1              P2M1=0x00;
+  59   1              P3M0=0x10;
+  60   1              P3M1=0x00;
+  61   1      
+  62   1              TMOD=0x00;                                                          //定时器0，定时方式0，16位自动重装
+  63   1              TH0=0xff;                                                               //赋初值
+  64   1              TL0=0x03;
+  65   1              EA=1;                                                                   //开总中断
+  66   1              ET0=1;                                                                  //开定时器0中断
+  67   1              TR0=1;                                                                  //开启定时器0
+  68   1      
+  69   1              led_sel=1;                                                              //选通LED灯
+  70   1              P0=0x00;                                                                //关闭P0口
+  71   1              beep=0;                                                                 //beep端口置0，起保护蜂鸣器作用
+  72   1              flag=0;                                                                 //振动标志位
+  73   1              vibrate=1;                                                              //振动传感器引脚置1
+  74   1      
+  75   1      }
+  76          void main()
+  77          {
+  78   1              uchar i;                                        //定义局部变量i,用作流水灯闪烁
+  79   1              init_sys();                                     //系统初始化
+  80   1              while(1)
+  81   1              {
+  82   2                      if(vibrate==0)             //若检测到低电平说明振动发生
+  83   2                      {                       
+  84   3                              flag=1;
+  85   3                      }
+  86   2                      if(flag==1)                        //振动发生flag会置低电平，点亮LED流水灯闪烁
+  87   2                      {
+  88   3                              i=0;
+  89   3                              while(i<9)
+  90   3                              {
+  91   4                                      
+  92   4                                      P0=table[i]; 
+  93   4                                      delay(300);                     
+  94   4                                      i++;
+  95   4                              }          
+  96   3                      }
+  97   2                      if(key1==0)                                //按下key1会关掉蜂鸣器的鸣叫和灯光闪烁
+  98   2                      {
+  99   3                              while(!key1);
+ 100   3                              flag=0;                                 //振动标志位置0
+ 101   3                              P0=0x00;                                //把流水灯端口置0
+ 102   3                      }
+ 103   2              }
+ 104   1      }
+ 105          
+ 106          /****************************************************
+ 107          定时器0的中断服务程序
+ 108          ****************************************************/
+ 109          void timer0() interrupt 1 
+ 110          {
+ 111   1              if(flag)
+ 112   1              {
+ 113   2                      beep=~beep;                //中断服务程序使得beep翻转产生方波
+ 114   2              }
+ 115   1              else
+ 116   1              {
+ 117   2                      beep=0;                   //使beep端口置0,起保护蜂鸣器作用
+C51 COMPILER V9.00   ALARM                                                                 08/19/2015 16:11:03 PAGE 3   
+
+ 118   2              }
+ 119   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    133    ----
+   CONSTANT SIZE    =      9    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

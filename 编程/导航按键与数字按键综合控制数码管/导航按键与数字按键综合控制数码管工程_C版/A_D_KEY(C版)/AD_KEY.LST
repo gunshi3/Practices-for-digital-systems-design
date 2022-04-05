@@ -1,0 +1,239 @@
+C51 COMPILER V9.51   AD_KEY                                                                04/24/2019 14:38:37 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE AD_KEY
+OBJECT MODULE PLACED IN AD_KEY.OBJ
+COMPILER INVOKED BY: d:\Keil\C51\BIN\C51.EXE AD_KEY.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          /**********************
+   2          myNavKey 导航按键+数字按键控制数码管
+   3          型号:STC15F2K60S2 主频:11.0592MHz
+   4          ************************/
+   5          #include <STC15F2K60S2.H>
+   6          #include <intrins.h>
+   7          #define uint  unsigned int
+   8          #define uchar unsigned char
+   9          
+  10          /*---------宏定义---------*/
+  11          #define cstAdcPower 0X80     /*ADC电源开关*/
+  12          #define cstAdcFlag 0X10      /*当A/D转换完成后，cstAdcFlag要软件清零*/
+  13          #define cstAdcStart 0X08     /*当A/D转换完成后，cstAdcStart会自动清零，所以要开始下一次转换，则需要置位*/
+  14          #define cstAdcSpeed90 0X60   /*ADC转换速度 90个时钟周期转换一次*/
+  15          #define cstAdcChs17 0X07     /*选择P1.7作为A/D输入*/
+  16          
+  17          /*---------引脚别名定义---------*/
+  18          sbit sbtLedSel = P2 ^ 3;     /*数码管和发光二极管选择位*/
+  19          sbit sbtSel0 = P2 ^ 0;
+  20          sbit sbtSel1 = P2 ^ 1;
+  21          sbit sbtSel2 = P2 ^ 2;
+  22          sbit sbtKey1 = P3 ^ 2;
+  23          sbit sbtKey2 = P3 ^ 3;
+  24          
+  25          /*---------变量定义---------*/
+  26          uchar ucSegSelectState;         /*段选标志*/
+  27          uchar ucDigSelectState;         /*位选标志*/
+  28          bit btKey3Flag;             /*key3键按下标志*/
+  29          //0123456789ABCDEF
+  30          uchar arrSegSelect[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f, 0x77, 0x7c, 0x39, 0x5e
+             -, 0x79, 0x71, 0x00};
+  31          //选择哪一位数码管
+  32          uchar arrDigSelect[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+  33          
+  34          /*---------初始化函数--------*/
+  35          void Init()
+  36          {
+  37   1          P0M1 = 0x00;
+  38   1          P0M0 = 0xff;
+  39   1          P2M1 = 0x00;
+  40   1          P2M0 = 0xff;
+  41   1      
+  42   1          sbtLedSel = 0;      //选择数码管作为输出
+  43   1          P1ASF = 0x80;       //P1.7作为模拟功能A/D使用
+  44   1          ADC_RES = 0;        //转换结果清零
+  45   1          ADC_CONTR = 0x8F;   //cstAdcPower = 1
+  46   1          CLK_DIV = 0X00;     //ADRJ = 0    ADC_RES存放高八位结果
+  47   1      
+  48   1          btKey3Flag = 0;
+  49   1          ucDigSelectState = 0;
+  50   1          ucSegSelectState = 0;
+  51   1      
+  52   1          IT0 = 0;            //设置IT0上升沿触发
+  53   1          IT1 = 0;
+  54   1          EA = 1;             //CPU开放中断
+C51 COMPILER V9.51   AD_KEY                                                                04/24/2019 14:38:37 PAGE 2   
+
+  55   1      }
+  56          
+  57          /*---------延时5ms子函数--------*/
+  58          void Delay5ms()     //@11.0592MHz  延时5ms
+  59          {
+  60   1          unsigned char i, j;
+  61   1          i = 54;
+  62   1          j = 199;
+  63   1          do
+  64   1          {
+  65   2              while ( --j );
+  66   2          }
+  67   1          while ( --i );
+  68   1      }
+  69          
+  70          /*---------延时100ms子函数--------*/
+  71          void Delay100ms()       //@11.0592MHz  延时100ms
+  72          {
+  73   1          unsigned char i, j, k;
+  74   1          _nop_();
+  75   1          _nop_();
+  76   1          i = 5;
+  77   1          j = 52;
+  78   1          k = 195;
+  79   1          do
+  80   1          {
+  81   2              do
+  82   2              {
+  83   3                  while ( --k );
+  84   3              }
+  85   2              while ( --j );
+  86   2          }
+  87   1          while ( --i );
+  88   1      }
+  89          
+  90          /*---------获取AD值子函数--------*/
+  91          unsigned char GetADC()
+  92          {
+  93   1          uchar ucAdcRes;
+  94   1          ADC_CONTR = cstAdcPower | cstAdcStart | cstAdcSpeed90 | cstAdcChs17;//没有将cstAdcFlag置1，用于判断A/D
+             -是否结束
+  95   1          _nop_();
+  96   1          _nop_();
+  97   1          _nop_();
+  98   1          _nop_();
+  99   1          while( !( ADC_CONTR & cstAdcFlag ) ); //等待直到A/D转换结束
+ 100   1          ADC_CONTR &= ~cstAdcFlag;           //cstAdcFlagE软件清0
+ 101   1          ucAdcRes = ADC_RES;                 //获取AD的值
+ 102   1          return ucAdcRes;
+ 103   1      }
+ 104          
+ 105          /*---------获取导航按键值子函数--------*/
+ 106          uchar NavKeyCheck()
+ 107          {
+ 108   1          unsigned char key;
+ 109   1          key = GetADC();     //获取AD的值
+ 110   1          if( key != 255 )    //有按键按下时
+ 111   1          {
+ 112   2              Delay5ms();
+ 113   2              key = GetADC();
+ 114   2              if( key != 255 )            //按键消抖 仍有按键按下
+ 115   2              {
+C51 COMPILER V9.51   AD_KEY                                                                04/24/2019 14:38:37 PAGE 3   
+
+ 116   3                  key = key & 0xE0;       //获取高3位，其他位清零
+ 117   3                  key = _cror_( key, 5 ); //循环右移5位 获取A/D转换高三位值，减小误差
+ 118   3                  return key;
+ 119   3              }
+ 120   2          }
+ 121   1          return 0x07;        //没有按键按下时返回值0x07
+ 122   1      }
+ 123          
+ 124          /*---------导航按键处理子函数--------*/
+ 125          void NavKey_Process()
+ 126          {
+ 127   1          uchar ucNavKeyCurrent;  //导航按键当前的状态
+ 128   1          uchar ucNavKeyPast;     //导航按键前一个状态
+ 129   1      
+ 130   1          ucNavKeyCurrent = NavKeyCheck();    //获取当前ADC值
+ 131   1          if( ucNavKeyCurrent != 0x07 )       //导航按键是否被按下 不等于0x07表示有按下
+ 132   1          {
+ 133   2              ucNavKeyPast = ucNavKeyCurrent;
+ 134   2              while( ucNavKeyCurrent != 0x07 )        //等待导航按键松开
+ 135   2                  ucNavKeyCurrent = NavKeyCheck();
+ 136   2      
+ 137   2              switch( ucNavKeyPast )
+ 138   2              {
+ 139   3                  case 0x00 :                     //K3
+ 140   3                      if( btKey3Flag == 0 )
+ 141   3                      {
+ 142   4                          btKey3Flag = 1;
+ 143   4                      }
+ 144   3                      else
+ 145   3                      {
+ 146   4                          btKey3Flag = 0;
+ 147   4                      }
+ 148   3                      break;
+ 149   3                  case 0x05 :                     //上键：显示的数字加1
+ 150   3                      if( ucSegSelectState == 15 )
+ 151   3                      {
+ 152   4                          ucSegSelectState = 0;
+ 153   4                      }
+ 154   3                      else
+ 155   3                          ucSegSelectState++;
+ 156   3                      break;
+ 157   3                  case 0x02 :                     //下键：显示的数字减1
+ 158   3                      if( ucSegSelectState == 0 )
+ 159   3                          ucSegSelectState = 15;
+ 160   3                      else
+ 161   3                          ucSegSelectState--;
+ 162   3                      break;
+ 163   3              }
+ 164   2          }
+ 165   1      
+ 166   1          Delay100ms();
+ 167   1      }
+ 168          
+ 169          /*---------主函数--------*/
+ 170          void main()
+ 171          {
+ 172   1          Init();
+ 173   1          P0 = 0x00;
+ 174   1          while( 1 )
+ 175   1          {
+ 176   2              NavKey_Process();         //获取按键按下情况
+ 177   2              P2 = arrDigSelect[ucDigSelectState];           //显示位
+C51 COMPILER V9.51   AD_KEY                                                                04/24/2019 14:38:37 PAGE 4   
+
+ 178   2              P0 = arrSegSelect[ucSegSelectState];       //显示数字
+ 179   2              if( btKey3Flag == 0 )   //KEY3=0则K1,K2键解锁，否则K1,K2键锁死
+ 180   2              {
+ 181   3                  if( sbtKey1 == 0 )    //sbtKey1按下，显示位右移一位
+ 182   3                  {
+ 183   4                      Delay5ms();
+ 184   4                      if( sbtKey1 == 0 )
+ 185   4                      {
+ 186   5                          while( !sbtKey1 );
+ 187   5      
+ 188   5                          if( ucDigSelectState == 7 )
+ 189   5                              ucDigSelectState = 0;
+ 190   5                          else
+ 191   5                              ucDigSelectState++;
+ 192   5                      }
+ 193   4                  }
+ 194   3                  if( sbtKey2 == 0 )   //sbtKey2按下，显示位左移一位
+ 195   3                  {
+ 196   4                      Delay5ms();
+ 197   4                      if( sbtKey2 == 0 )
+ 198   4                      {
+ 199   5                          while( !sbtKey2 );
+ 200   5                          if( ucDigSelectState == 0 )
+ 201   5                              ucDigSelectState = 7;
+ 202   5                          else
+ 203   5                              ucDigSelectState--;
+ 204   5                      }
+ 205   4                  }
+ 206   3              }
+ 207   2          }
+ 208   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    261    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     27    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

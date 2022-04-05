@@ -1,0 +1,5 @@
+"STARTUP.obj",
+"MAIN.obj",
+"RC522.obj" 
+TO "RFID" RTX51 
+RAMSIZE(256) 

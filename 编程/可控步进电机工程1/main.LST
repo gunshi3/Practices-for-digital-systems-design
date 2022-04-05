@@ -1,0 +1,221 @@
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:55:37 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          /**********************
+   2          myXstep2 可控步进电机(正反转暂停)
+   3          型号:STC15F2K60S2 主频:11.0592MHz
+   4          ************************/
+   5          #include <STC15F2K60S2.h>
+   6          #define uint unsigned int
+   7          
+   8          /*---------宏定义---------*/
+   9          #define cstKeyMaxNum 100                     //100次读取按键值
+  10          
+  11          uint code arrSegSelect[] = { 0x3f, 0x06, 0x5b, 0x4f, 0x66,
+  12                                       0x6d, 0x7d, 0x07, 0x7f, 0x6f,
+  13                                       0x77, 0x7c, 0x39, 0x5e, 0x79,
+  14                                       0x71, 0x40, 0x00
+  15                                     };   //数码管显示0~4的16进制代码
+  16          
+  17          /*---------引脚别名定义---------*/
+  18          sbit sbtKey1 = P3 ^ 2;                                               //按键1
+  19          sbit sbtKey2 = P3 ^ 3;                                               //按键2
+  20          sbit sbtKey3 = P1 ^ 7;                                               //按键3
+  21          sbit sbtS1  = P4 ^ 1;
+  22          sbit sbtS2  = P4 ^ 2;
+  23          sbit sbtS3  = P4 ^ 3;
+  24          sbit sbtS4  = P4 ^ 4;
+  25          
+  26          /*---------变量定义---------*/
+  27          uint uiKey1Cnt;
+  28          uint uiKey2Cnt;
+  29          uint uiKey3Cnt;
+  30          uint uiKeyAllCnt;
+  31          
+  32          uint uiSpeed = 1;                                    //控制控制步进电机的速度
+  33          
+  34          uint i = 1;                                          //控制脉冲对应的IO口位置
+  35          bit  btKey1Current = 1;                              //Key1当前的状态
+  36          bit  btKey1Past = 1;                                 //Key1前一个状态
+  37          bit  btKey2Current = 1;                              //Key2当前的状态
+  38          bit  btKey2Past = 1;                                 //Key2前一个状态
+  39          bit  btKey3Current = 1;                               //Key3当前的状态
+  40          bit  btKey3Past = 1;                                  //Key3前一个状态
+  41          bit  btRotationFlag = 0;                               //标记步进电机转向
+  42          
+  43          
+  44          /*---------初始化函数--------*/
+  45          void InitSys()           //功能是配置IO口,启动定时器0和1
+  46          {
+  47   1          P0M0 = 0xff;                                   //P0口设置推挽输出
+  48   1          P0M1 = 0x00;
+  49   1      
+  50   1          P4M0 = 0x3f;                                    //P4口设置推挽输出
+  51   1          P4M1 = 0xe1;
+  52   1          P4 = 0xe1;      //设置P4口为低电平，避免复位时步进电机5V电平接口的影响
+  53   1      
+  54   1          P2M0 = 0x07;                                  //P2.3口设置推挽输出
+  55   1          P2M1 = 0x00;
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:55:37 PAGE 2   
+
+  56   1          P2 = 0X07;                                     //设置数码管显示
+  57   1      
+  58   1          uiKey1Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+  59   1          uiKey2Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+  60   1          uiKey3Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+  61   1          uiKeyAllCnt = cstKeyMaxNum;
+  62   1      
+  63   1          AUXR =  0X00;                   //定时器0和定时器1 时钟1T模式
+  64   1          TMOD =  0X00;                  //设置定时器0和定时器1 16位自动重装模式
+  65   1          TL0  = ( 65536 - 250 ) % 256;       //设置定时0定时为 250μs
+  66   1          TH0  = ( 65536 - 250 ) / 256;
+  67   1          TH1  = ( 65536 - 5000 * uiSpeed ) / 256;       //设置定时1定时为 5ms*uiSpeed
+  68   1          TL1  = ( 65536 - 5000 * uiSpeed ) % 256;
+  69   1          TCON = 0X50;                        //定时器0和1开始计时
+  70   1          IE   = 0x8A;                         //定时器0和1开启中断，CPU开启中断
+  71   1      }
+  72          
+  73          /*---------T1定时器中断服务处理函数--------*/
+  74          void T1_Process() interrupt 3                //控制脉冲频率
+  75          {
+  76   1          TH1  = ( 65536 - 5000 * uiSpeed ) / 256;  //通过在定时器1的时间来改变脉冲频率
+  77   1          TL1  = ( 65536 - 5000 * uiSpeed ) % 256;
+  78   1          if( btRotationFlag == 0 )                //控制步进电机正转
+  79   1          {
+  80   2              switch( i++ )                     //循环改变不同IO脚的脉冲电平
+  81   2              {
+  82   3                  case 1:
+  83   3                      sbtS1 = 1; sbtS2 = 0; sbtS3 = 0; sbtS4 = 0; break;
+  84   3                  case 2:
+  85   3                      sbtS1 = 0; sbtS2 = 1; sbtS3 = 0; sbtS4 = 0; break;
+  86   3                  case 3:
+  87   3                      sbtS1 = 0; sbtS2 = 0; sbtS3 = 1; sbtS4 = 0; break;
+  88   3                  case 4:
+  89   3                      sbtS1 = 0; sbtS2 = 0; sbtS3 = 0; sbtS4 = 1; break;
+  90   3              }
+  91   2              if( i == 5 )
+  92   2                  i = 1;
+  93   2          }                                                          
+  94   1          else                                 //控制步进电机反转
+  95   1          {
+  96   2              switch( i++ )
+  97   2              {
+  98   3                  case 1:
+  99   3                      sbtS1 = 0; sbtS2 = 0; sbtS3 = 0; sbtS4 = 1; break;
+ 100   3                  case 2:
+ 101   3                      sbtS1 = 0; sbtS2 = 0; sbtS3 = 1; sbtS4 = 0; break;
+ 102   3                  case 3:
+ 103   3                      sbtS1 = 0; sbtS2 = 1; sbtS3 = 0; sbtS4 = 0; break;
+ 104   3                  case 4:
+ 105   3                      sbtS1 = 1; sbtS2 = 0; sbtS3 = 0; sbtS4 = 0; break;
+ 106   3              }
+ 107   2              if( i == 5 )
+ 108   2                  i = 1;
+ 109   2          }
+ 110   1      }
+ 111          /*---------T0定时器中断服务处理函数--------*/
+ 112          void T0_Process() interrupt 1  //按键消抖+中断处理（控制步进电机转向和速度）
+ 113          {
+ 114   1          if( sbtKey1 == 0 )
+ 115   1              uiKey1Cnt--;
+ 116   1          if( sbtKey2 == 0 )
+ 117   1              uiKey2Cnt--;
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:55:37 PAGE 3   
+
+ 118   1          if( sbtKey3 == 0 )
+ 119   1              uiKey3Cnt--;                                  //按键是按下状态
+ 120   1          uiKeyAllCnt--;                                     //总的次数减1
+ 121   1      
+ 122   1          if( uiKeyAllCnt == 0 )                                //100次完了
+ 123   1          {
+ 124   2              if( uiKey2Cnt < 0x80 )
+ 125   2              {
+ 126   3                  btKey2Current = 0;
+ 127   3                  if( btKey2Past == 1 )       //下降沿（按键则步进电机的转速改变，//uiSpeed值越大，转速越慢）
+ 128   3                  {
+ 129   4                      btKey2Past = 0;
+ 130   4                      uiSpeed++;
+ 131   4                      if( uiSpeed == 12 )
+ 132   4                          uiSpeed = 1;
+ 133   4                  }
+ 134   3      
+ 135   3              }
+ 136   2              if( uiKey2Cnt >= 0x80 )
+ 137   2              {
+ 138   3                  btKey2Current = 1;
+ 139   3                  if( btKey2Past == 0 )
+ 140   3                      btKey2Past = 1;          //上升沿（假设不做动作那就继续）
+ 141   3              }
+ 142   2      
+ 143   2              if( uiKey1Cnt < 0x80 )
+ 144   2              {
+ 145   3                  btKey1Current = 0;
+ 146   3                  if( btKey1Past == 1 )          //下降沿（按键改变步进电机转向）
+ 147   3                  {
+ 148   4                      btKey1Past = 0;
+ 149   4                      btRotationFlag = ~btRotationFlag;
+ 150   4                  }
+ 151   3      
+ 152   3              }
+ 153   2              if( uiKey1Cnt >= 0x80 )
+ 154   2              {
+ 155   3                  btKey1Current = 1;
+ 156   3                  if( btKey1Past == 0 )
+ 157   3                      btKey1Past = 1;         //上升沿（假设不做动作那就继续）
+ 158   3              }
+ 159   2      
+ 160   2              if( uiKey3Cnt < 0x80 )
+ 161   2              {
+ 162   3                  btKey3Current = 0;
+ 163   3                  if( btKey3Past == 1 )          //下降沿（按键改变步进电机转向）
+ 164   3                  {
+ 165   4                      btKey3Past = 0;
+ 166   4                      TR1 = ~TR1;
+ 167   4                  }
+ 168   3      
+ 169   3              }
+ 170   2              if( uiKey3Cnt >= 0x80 )
+ 171   2              {
+ 172   3                  btKey3Current = 1;
+ 173   3                  if( btKey3Past == 0 )
+ 174   3                      btKey3Past = 1;              //上升沿（假设不做动作那就继续）
+ 175   3              }
+ 176   2      
+ 177   2              uiKey1Cnt = 0x80 + cstKeyMaxNum / 3 * 2;          //新一轮的判断
+ 178   2              uiKey2Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+ 179   2              uiKey3Cnt = 0x80 + cstKeyMaxNum / 3 * 2;
+C51 COMPILER V9.51   MAIN                                                                  07/15/2021 14:55:37 PAGE 4   
+
+ 180   2              uiKeyAllCnt = cstKeyMaxNum;
+ 181   2          }
+ 182   1      }
+ 183          
+ 184          /*---------主函数---------*/
+ 185          void main()
+ 186          {
+ 187   1          InitSys();
+ 188   1          while( 1 )
+ 189   1          {
+ 190   2              P0 = arrSegSelect[uiSpeed]; // P0口显示步进电机速度，范围1-4,1档速度最快
+ 191   2          }
+ 192   1      } 
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    669    ----
+   CONSTANT SIZE    =     36    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      7    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

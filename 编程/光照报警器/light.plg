@@ -1,0 +1,16 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+F:\2015小学期大二进大三_电子实训_Ver2发布\4_案例工程与测试指导\STC-B案例_学生版\25_光照报警器\光照报警器\light.uvproj
+Project File Date:  08/13/2015
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+assembling STARTUP.A51...
+compiling light.c...
+linking...
+Program Size: data=76.2 xdata=0 code=1414
+creating hex file from "light"...
+"light" - 0 Error(s), 0 Warning(s).

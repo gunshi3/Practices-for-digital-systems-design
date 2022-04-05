@@ -1,0 +1,20 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+D:\4_STC-B案例\23_导航按键与数字按键综合控制数码管\导航按键与数字按键综合控制数码管工程_C版\A_D_KEY(C版)\AD_KEY.uvproj
+Project File Date:  08/11/2016
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+compiling AD_KEY.c...
+linking...
+Program Size: data=36.1 xdata=0 code=434
+creating hex file from "AD_KEY"...
+"AD_KEY" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+linking...
+Program Size: data=36.1 xdata=0 code=434
+creating hex file from "AD_KEY"...
+"AD_KEY" - 0 Error(s), 0 Warning(s).

@@ -1,0 +1,333 @@
+C51 COMPILER V9.51   MAIN                                                                  04/15/2020 13:22:14 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <STC15F2K60S2.h>
+   2          #define uint unsigned int
+   3          #define uchar unsigned char
+   4          #define FOSC 11059200L  //晶振频率
+   5          #define T_ms 0.1        //定时时间为0.1ms
+   6          #define NMAX_KEY 10
+   7          /*位声明*/
+   8          sbit Key1 = P3 ^ 2;     //按下key1，向存储器写入数据并读取该地址的数据，显示在数码管上。
+   9          sbit Key2 = P3 ^ 3;     //按下key2，要写入的数据加1
+  10          sbit Key3 = P1 ^ 7;     //按下key3，要写入的地址加1
+  11          sbit led = P2 ^ 3;      //LED灯与数码管切换引脚
+  12          sbit SDA = P4 ^ 0;      //I2C总线的数据线
+  13          sbit SCL = P5 ^ 5;      //I2C总线的时钟线
+  14          sbit Beep = P3 ^ 4;
+  15          /*变量定义*/
+  16          uchar duan[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f, 0x77, 0x7c, 0x39, 0x5e, 0x79, 
+             -0x71}; //数码管段选，显示0-f
+  17          uchar wei[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}; //数码管位选
+  18          uchar flag1;                //数码管循环扫描变量
+  19          uchar write_addr;           //写入地址
+  20          uchar write_date;           //写入数据
+  21          uchar read_date;            //读出数据
+  22          /*按键计数消抖变量*/
+  23          uchar G_count;              //定时器0中断计数值
+  24          uint Key1_count;            //KEY1键在1ms内达到低电平的次数
+  25          uint Key2_count;            //KEY2键在1ms内达到低电平的次数
+  26          uint Key3_count;            //KEY3键在1ms内达到低电平的次数
+  27          uint Key_count;             //由100递减到0
+  28          bit flg_1ms;                //表示1ms时间到
+  29          bit Key1_C;/*key1当前的状态*/
+  30          bit Key1_P;/*key1前一个状态*/
+  31          bit Key2_C;/*key2当前的状态*/
+  32          bit Key2_P;/*key2前一个状态*/
+  33          bit Key3_C;/*key3当前的状态*/
+  34          bit Key3_P;/*key3前一个状态*/
+  35          
+  36          void SMG1( uchar date1, uchar date2, uchar date3 ) //数码管显示函数
+  37          {
+  38   1          flag1++;
+  39   1          if( flag1 == 8 )
+  40   1          {
+  41   2              flag1 = 0;
+  42   2          }
+  43   1          P0 = 0x00;
+  44   1          P2 = wei[flag1];
+  45   1          switch( flag1 )
+  46   1          {
+  47   2              case 0:
+  48   2                  P0 = duan[date1 / 16];   break;
+  49   2              case 1:
+  50   2                  P0 = duan[date1 % 16];   break;
+  51   2              case 2:
+  52   2                  P0 = 0x40;   break;
+  53   2              case 3:
+  54   2                  P0 = duan[date2 / 16];   break;
+C51 COMPILER V9.51   MAIN                                                                  04/15/2020 13:22:14 PAGE 2   
+
+  55   2              case 4:
+  56   2                  P0 = duan[date2 % 16];   break;
+  57   2              case 5:
+  58   2                  P0 = 0x40;   break;
+  59   2              case 6:
+  60   2                  P0 = duan[date3 / 16];    break;
+  61   2              default:
+  62   2                  P0 = duan[date3 % 16];   break;
+  63   2          }
+  64   1      }
+  65          
+  66          void KEY_init() //按键消抖模块初始化
+  67          {
+  68   1          G_count = 0;
+  69   1          flg_1ms = 0;
+  70   1          Key1_C = 1; /*key1当前的状态*/
+  71   1          Key1_P = 1; /*key1前一个状态*/
+  72   1          Key2_C = 1; /*key2当前的状态*/
+  73   1          Key2_P = 1; /*key2前一个状态*/
+  74   1          Key3_C = 1; /*key3当前的状态*/
+  75   1          Key3_P = 1; /*key3前一个状态*/
+  76   1          Key1_count = 0x80 + NMAX_KEY / 3 * 2;
+  77   1          Key2_count = 0x80 + NMAX_KEY / 3 * 2;
+  78   1          Key3_count = 0x80 + NMAX_KEY / 3 * 2;
+  79   1          Key_count = NMAX_KEY;
+  80   1      }
+  81          
+  82          void delay()        //延时4us
+  83          {
+  84   1          ;;
+  85   1      }
+  86          
+  87          void IIC_init()     //I2C总线初始化
+  88          {
+  89   1          SCL = 1;
+  90   1          delay();
+  91   1          SDA = 1;
+  92   1          delay();
+  93   1      }
+  94          void start()        //主机启动信号
+  95          {
+  96   1          SDA = 1;
+  97   1          delay();
+  98   1          SCL = 1;
+  99   1          delay();
+ 100   1          SDA = 0;
+ 101   1          delay();
+ 102   1      }
+ 103          void stop()         //停止信号
+ 104          {
+ 105   1          SDA = 0;
+ 106   1          delay();
+ 107   1          SCL = 1;
+ 108   1          delay();
+ 109   1          SDA = 1;
+ 110   1          delay();
+ 111   1      }
+ 112          void respons()      //从机应答信号
+ 113          {
+ 114   1          uchar i = 0;
+ 115   1          SCL = 1;
+ 116   1          delay();
+C51 COMPILER V9.51   MAIN                                                                  04/15/2020 13:22:14 PAGE 3   
+
+ 117   1          while( SDA == 1 && ( i < 255 ) ) //表示若在一段时间内没有收到从器件的应答则
+ 118   1              i++;                //主器件默认从期间已经收到数据而不再等待应答信号。
+ 119   1          SCL = 0;
+ 120   1          delay();
+ 121   1      }
+ 122          void writebyte( uchar date ) //对24C02写一个字节数据
+ 123          {
+ 124   1          uchar i, temp;
+ 125   1          temp = date;
+ 126   1          for( i = 0; i < 8; i++ )
+ 127   1          {
+ 128   2              temp = temp << 1;
+ 129   2              SCL = 0;
+ 130   2              delay();
+ 131   2              SDA = CY;
+ 132   2              delay();
+ 133   2              SCL = 1;
+ 134   2              delay();
+ 135   2          }
+ 136   1          SCL = 0;
+ 137   1          delay();
+ 138   1          SDA = 1;
+ 139   1          delay();
+ 140   1      }
+ 141          uchar readbyte()            //从24C02读一个字节数据
+ 142          {
+ 143   1          uchar i, k;
+ 144   1          SCL = 0;
+ 145   1          delay();
+ 146   1          SDA = 1;
+ 147   1          delay();
+ 148   1          for( i = 0; i < 8; i++ )
+ 149   1          {
+ 150   2              SCL = 1;
+ 151   2              delay();
+ 152   2              k = ( k << 1 ) | SDA;
+ 153   2              delay();
+ 154   2              SCL = 0;
+ 155   2              delay();
+ 156   2          }
+ 157   1          delay();
+ 158   1          return k;
+ 159   1      }
+ 160          void write_add( uchar addr, uchar date ) //对24C02的地址addr，写入一个数据date
+ 161          {
+ 162   1          start();
+ 163   1          writebyte( 0xa0 );
+ 164   1          respons();
+ 165   1          writebyte( addr );
+ 166   1          respons();
+ 167   1          writebyte( date );
+ 168   1          respons();
+ 169   1          stop();
+ 170   1      }
+ 171          uchar read_add( uchar addr )      //从24C02的addr地址，读一个字节数据
+ 172          {
+ 173   1          uchar date;
+ 174   1          start();
+ 175   1          writebyte( 0xa0 );
+ 176   1          respons();
+ 177   1          writebyte( addr );
+ 178   1          respons();
+C51 COMPILER V9.51   MAIN                                                                  04/15/2020 13:22:14 PAGE 4   
+
+ 179   1          start();
+ 180   1          writebyte( 0xa1 );
+ 181   1          respons();
+ 182   1          date = readbyte();
+ 183   1          stop();
+ 184   1          return date;
+ 185   1      }
+ 186          
+ 187          void IO_init()       //IO口初始化，变量初始化
+ 188          {
+ 189   1          P2M1 = 0x00;    //设置P0口和P2^3推挽输出
+ 190   1          P2M0 = 0x08;
+ 191   1          P0M1 = 0x00;
+ 192   1          P0M0 = 0xff;    //按键无需推挽
+ 193   1          led = 0;        //关LED显示
+ 194   1          P0 = 0x00;
+ 195   1              Beep=0;            //确保蜂鸣器关
+ 196   1          write_addr = 0x00;      //写入地址初始化
+ 197   1          write_date = 0x00;      //写入数据初始化
+ 198   1      }
+ 199          
+ 200          void Timer0_Init()       //计时器0初始化
+ 201          {
+ 202   1          TMOD = 0x00;        //计时器0工作方式0，16位自动重装计数
+ 203   1          AUXR = 0x80;        //1T模式,T0x12=1,
+ 204   1          EA = 1;             //开总中断
+ 205   1          ET0 = 1;            //开定时器0中断
+ 206   1          TH0 = ( 65536 - T_ms * FOSC / 1000 ) / 256;  //给定时器赋初值
+ 207   1          TL0 = ( 65536 - T_ms * FOSC / 1000 );  
+ 208   1          TR0 = 1;                              //启动定时器
+ 209   1      }
+ 210          
+ 211          void Timer_T0() interrupt 1  //定时器0中断函数
+ 212          {
+ 213   1          G_count++;
+ 214   1          if( G_count == 10 )
+ 215   1          {
+ 216   2              flg_1ms = 1;       //1ms时间到，fla_1ms=1
+ 217   2              G_count = 0x00;
+ 218   2          }
+ 219   1          SMG1( write_addr, write_date, read_date ); //在定时器中短中调用数码管显示函数
+ 220   1      }
+ 221          
+ 222          int main()                 //主函数
+ 223          {
+ 224   1          IO_init();            //IO口初始化
+ 225   1          Timer0_Init();        //定时器0初始化
+ 226   1          KEY_init();           //按键消抖模块初始化
+ 227   1          IIC_init();            //IIC总线初始化
+ 228   1          while( 1 )
+ 229   1          {
+ 230   2              while( flg_1ms )  //1ms时间到 判断按键状态
+ 231   2              {
+ 232   3                  flg_1ms = 0;
+ 233   3                  read_date = read_add( write_addr ); //读出地址为write_addr的数据
+ 234   3                  if( Key1 == 0 )
+ 235   3                      Key1_count--;
+ 236   3                  if( Key2 == 0 )
+ 237   3                      Key2_count--;
+ 238   3                  if( Key3 == 0 )           //按键是按下状态
+ 239   3                      Key3_count--;
+ 240   3                  Key_count--;           //总的次数减1
+C51 COMPILER V9.51   MAIN                                                                  04/15/2020 13:22:14 PAGE 5   
+
+ 241   3                  if( Key_count == 0 )      //10次完了
+ 242   3                  {
+ 243   4                      if( Key1_count < 0x80 )
+ 244   4                      {
+ 245   5                          Key1_C = 0;
+ 246   5                          if( Key1_P == 1 )       //下降沿（按键做动作）
+ 247   5                          {
+ 248   6                              Key1_P = 0;
+ 249   6                              write_add( write_addr, write_date ); //向地址write_addr写入数据
+ 250   6                          }
+ 251   5                      }
+ 252   4                      if( Key1_count >= 0x80 )
+ 253   4                      {
+ 254   5                          Key1_C = 1;
+ 255   5                          if( Key1_P == 0 )
+ 256   5                              Key1_P = 1;          //上升沿（假设不做动作那就继续）
+ 257   5                      }
+ 258   4                      if( Key2_count < 0x80 )
+ 259   4                      {
+ 260   5                          Key2_C = 0;
+ 261   5                          if( Key2_P == 1 )         //下降沿（按键做动作）
+ 262   5                          {
+ 263   6                              Key2_P = 0;
+ 264   6                              write_date++;           //按键数据加1
+ 265   6                              if( write_date == 0xff ) //假如输入的数据大于0xff，则变为0x00。
+ 266   6                                  write_date = 0x00;
+ 267   6                          }
+ 268   5                      }
+ 269   4                      if( Key2_count >= 0x80 )
+ 270   4                      {
+ 271   5                          Key2_C = 1;
+ 272   5                          if( Key2_P == 0 )
+ 273   5                              Key2_P = 1;  //上升沿（假设不做动作那就继续）
+ 274   5                      }
+ 275   4                      if( Key3_count < 0x80 )
+ 276   4                      {
+ 277   5                          Key3_C = 0;
+ 278   5                          if( Key3_P == 1 ) //下降沿（按键做动作）
+ 279   5                          {
+ 280   6                              Key3_P = 0;
+ 281   6                              write_addr++;           //按键写入地址+1
+ 282   6                              if( write_addr == 0xff )
+ 283   6                                  write_addr = 0;
+ 284   6                          }
+ 285   5                      }
+ 286   4                      if( Key3_count >= 0x80 )
+ 287   4                      {
+ 288   5                          Key3_C = 1;
+ 289   5                          if( Key3_P == 0 )
+ 290   5                              Key3_P = 1;  //上升沿（假设不做动作那就继续）
+ 291   5                      }
+ 292   4                      Key1_count = 0x80 + NMAX_KEY / 3 * 2; //新一轮的判断
+ 293   4                      Key2_count = 0x80 + NMAX_KEY / 3 * 2;
+ 294   4                      Key3_count = 0x80 + NMAX_KEY / 3 * 2;
+ 295   4                      Key_count = NMAX_KEY;
+ 296   4                  }
+ 297   3              }//read_date=read_add(read_addr); 读数据函数放在此处数码管会无法及时显示
+ 298   2          }
+ 299   1      } 
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.51   MAIN                                                                  04/15/2020 13:22:14 PAGE 6   
+
+   CODE SIZE        =    651    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     37    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      7    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

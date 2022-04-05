@@ -1,0 +1,21 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+D:\4_STC-B°¸Àý\13_»ô¶û´Å³¡¼ì²â\»ô¶û´Å³¡¼ì²â¹¤³Ì\»ô¶û´Å³¡¼ì²â_C°æ\Hall¿ØÖÆLEDÁÁÃð\Hall.uvproj
+Project File Date:  08/22/2014
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling Hall.c...
+linking...
+Program Size: data=10.0 xdata=0 code=47
+creating hex file from "Hall"...
+"Hall" - 0 Error(s), 0 Warning(s).
+Rebuild target 'Target 1'
+compiling Hall.c...
+linking...
+Program Size: data=10.0 xdata=0 code=47
+creating hex file from "Hall"...
+"Hall" - 0 Error(s), 0 Warning(s).

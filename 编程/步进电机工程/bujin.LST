@@ -1,0 +1,91 @@
+C51 COMPILER V9.05   BUJIN                                                                 10/14/2015 10:57:20 PAGE 1   
+
+
+C51 COMPILER V9.05, COMPILATION OF MODULE BUJIN
+OBJECT MODULE PLACED IN bujin.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE bujin.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /***********************
+   2          基于STC15F2K60S2系列单片机C语言编程实现
+   3          使用如下头文件，不用另外再包含"REG51.H"
+   4          ***********************/
+   5          #include <STC15F2K60S2.h>
+   6          #define uint unsigned int
+   7          uint i=1;                                                                                                               //控制步进电机不同IO口脉冲位置
+   8          /**********************
+   9          引脚别名定义
+  10          ***********************/
+  11          sbit s1 =P4^1;                                                                                              //步进电机IO口
+  12          sbit s2 =P4^2;
+  13          sbit s3 =P4^3;
+  14          sbit s4 =P4^4;
+  15          //sbit LED=P2^3;                                                                                                        //LED与数码管切换
+  16          /**********************
+  17          函数名称：void time0()
+  18          功能描述：定时器中断,控制脉冲转换
+  19          入口参数：无
+  20          出口参数：无
+  21          ***********************/
+  22          void time0() interrupt 1
+  23          {
+  24   1               switch(i++)                                                                                            //控制步进电机不同IO口脉冲电平
+  25   1               {
+  26   2               case 1: s1=1;s2=0;s3=0;s4=0;break;
+  27   2               case 2: s1=0;s2=1;s3=0;s4=0;break;
+  28   2               case 3: s1=0;s2=0;s3=1;s4=0;break;
+  29   2               case 4: s1=0;s2=0;s3=0;s4=1;break;
+  30   2               }
+  31   1               if(i==5)
+  32   1               i=1;
+  33   1      }
+  34          
+  35          /**********************
+  36          函数名称：init_sys()
+  37          功能描述：系统初始化，功能是配置IO口
+  38          入口参数：无
+  39          出口参数：无
+  40          ***********************/
+  41          void init_sys()                   
+  42          {                                                                                                                               //P4口推挽输出
+  43   1          P4M0=0Xff;
+  44   1              P4M1=0X00;
+  45   1      //      LED =0;                                                                                                         //设置为数码管显示
+  46   1              P4  =0X00;                                                                                                  //P4口设置低电平，避免复位时对步进电机5V电平接口的影响
+  47   1      
+  48   1              TMOD = 0x00;                                                    //设置定时器0 16位自动重装模式
+  49   1              TH0  = (65536-10000)/256;                                       //设置定时5ms
+  50   1              TL0  = (65536-10000)%256;
+  51   1              TCON = 0X10;                                                    //定时器0开始计时
+  52   1              IE   = 0x82;                                                            //开启CPU中断，开启定时器0中断
+  53   1      }
+  54          /**********************
+  55          函数名称：main()
+C51 COMPILER V9.05   BUJIN                                                                 10/14/2015 10:57:20 PAGE 2   
+
+  56          功能描述：调用函数初始化
+  57          入口参数：无
+  58          出口参数：无
+  59          ***********************/
+  60          void main()
+  61          {
+  62   1              init_sys();
+  63   1              while(1)
+  64   1              {
+  65   2              }
+  66   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    125    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,4 @@
+"STARTUP.obj",
+"zsl_pr.obj" 
+TO "zsl_pr" 
+RAMSIZE(256) 

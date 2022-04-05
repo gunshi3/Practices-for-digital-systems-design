@@ -1,0 +1,275 @@
+C51 COMPILER V9.51   MAIN                                                                  09/12/2021 22:56:21 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\output\main.obj
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE source\main.c BROWSE INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(.\list\main.lst
+                    -) TABS(2) OBJECT(.\output\main.obj)
+
+line level    source
+
+   1          /******************  STCBSP²âÊÔDemo£ºSTC_DemoV3 *************************** 
+   2          STCBSPÌá¹©µÄµ×²ãÖ§³ÖºÍÓ¦ÓÃ²ãº¯ÊýÖ§³ÖÒÔÏÂ"STC-BÑ§Ï°°å"¹¦ÄÜÍ¬Ê±¹¤×÷£º
+   3               1£¬ÊýÂë¹ÜÏÔÊ¾
+   4               2£¬LEDÖ¸Ê¾µÆÏÔÊ¾
+   5               3£¬ÊµÊ±Ê±ÖÓ
+   6               4£¬ÎÂ¶È¹âÕÕ²âÁ¿
+   7               5£¬ÒôÀÖ²¥·Å
+   8               6£¬FMÊÕÒô»ú
+   9               7£¬EXTÀ©Õ¹½Ó¿Ú£¨µç×Ó³Ó¡¢³¬Éù²¨²â¾à¡¢Ðý×ª±àÂëÆ÷¡¢PWM¿ØÖÆ£¬4Ñ¡1¹¤×÷£©
+  10               8£¬Õñ¶¯´«¸ÐÆ÷
+  11               9£¬»ô¶û´«¸ÐÆ÷
+  12               10£¬²½½øµç»ú¿ØÖÆ
+  13               11£¬´®¿Ú1Í¨ÐÅ
+  14               12£¬´®¿Ú2Í¨ÐÅ£¨485¡¢EXTÀ©Õ¹½Ó¿Ú£¬2Ñ¡1£©
+  15               13£¬ºìÍâÒ£¿Ø
+  16               14£¬ºìÍâÊÕ·¢Í¨ÐÅ
+  17               15£¬·ÇÒ×Ê§ÐÔNVM´æ´¢£¨DS1302Ìá¹©31×Ö½Ú£¬M24C02Ìá¹©256×Ö½Ú£©
+  18          ¾ßÌåÊ¹ÓÃ·½·¨Çë²Î¼û¸÷Ä£¿éÍ·ÎÄ¼þ¡£
+  19          
+  20          ±¾STC_DemoV3Ê¾Àý³ÌÐò£¨Ô´³ÌÐòÓÉmain.c¡¢main.h¡¢function.cÈý²¿·Ö×é³É£©¹¦ÄÜÃèÊöÈçÏÂ£º     
+  21              1£¬°´¼üKey2ÇÐ»»"ÏÔÊ¾"ºÍ"°´¼ü²Ù×÷"Ä£Ê½¡£Ä£Ê½ÖµÔÚLEDÉÏÏÔÊ¾£¨¶þ½øÖÆÊý£©¡£Ä£Ê½ÓÐ£º
+  22                     Ä£Ê½1£ºÊµÊ±Ê±ÖÓ£¨ÄêÔÂÈÕ£©
+  23                     Ä£Ê½2£ºÊµÊ±Ê±ÖÓ£¨Ê±·ÖÃë£©
+  24                     Ä£Ê½3£ºÎÂ¶È¡¢¹âÕÕ²âÁ¿
+  25                     Ä£Ê½4£ºÒôÀÖ²¥·Å
+  26                     Ä£Ê½5£ºFMÊÕÒô»ú
+  27                     Ä£Ê½6£º³¬Éù²¨²â¾à£¨ÐèÒªÔÚEXTÉÏ½Ó³¬Éù²¨²â¾àÄ£¿é£©
+  28                     Ä£Ê½7£ºµç×Ó³Ó    £¨ÐèÒªÔÚEXTÉÏ½Óµç×Ó³ÓÄ£¿é£©
+  29              2£¬ÊýÂë¹ÜÏÔÊ¾¡¢µ¼º½°´¼ü¹¦ÄÜ£º
+  30                     ÔÚÄ£Ê½1ÏÂ£ºÊýÂë¹ÜÏÔÊ¾ÊµÊ±Ê±ÖÓRTC   "ÄêÄê-ÔÂÔÂ-ÈÕÈÕ"£¬µ¼º½°´¼ü "ÖÐ"¼ü ½øÈë»òÍË³ö"ÉèÖÃÄêÔÂÈÕ"£»"ÉÏ¡
+             -¢ÏÂ¡¢×ó¡¢ÓÒ"ÉèÖÃ
+  31                     ÔÚÄ£Ê½2ÏÂ£ºÊýÂë¹ÜÏÔÊ¾ÊµÊ±Ê±ÖÓRTC   "Ê±Ê±-·Ö·Ö-ÃëÃë"£¬µ¼º½°´¼ü "ÖÐ"¼ü ½øÈë»òÍË³ö"ÉèÖÃÊ±·ÖÃë"£»"ÉÏ¡
+             -¢ÏÂ¡¢×ó¡¢ÓÒ"ÉèÖÃ
+  32                     ÔÚÄ£Ê½3ÏÂ£ºÊýÂë¹ÜÏÔÊ¾ÎÂ¶È¡¢¹âÕÕADÖµ"ÎÂÎÂÎÂ  ¹â¹â¹â", µ¼º½°´¼üÎÞ²Ù×÷
+  33                     ÔÚÄ£Ê½4ÏÂ£ºÊýÂë¹ÜÏÔÊ¾      "½ÚÅÄÂÊ  Òôµ÷Òô¸ß  Òô·û"£¬µ¼º½°´¼ü "ÖÐ"¼ü ÔÝÍ£/²¥·Å£¬"ÉÏ¡¢ÏÂ"µ÷ÕûÒôµ÷£¬"×
+             -ó¡¢ÓÒ"µ÷Õû½ÚÅÄÂÊ
+  34                     ÔÚÄ£Ê½5ÏÂ£ºÊýÂë¹ÜÏÔÊ¾      "ÒôÁ¿   ÊÕÒôÆµÂÊ£¨MHz£©"£¬µ¼º½°´¼ü "ÖÐ"¼ü ±£´æµ±Ç°ÊÕÒô²ÎÊýµ½NVM£¨ÏÂ´
+             -ÎÉÏµçÊ±£¬ÓÃ¸Ã²ÎÊýÊÕÒô£©
+  35                                                                                   "ÉÏ¡¢ÏÂ"µ÷ÕûÒôÁÁ£¬"×ó¡¢ÓÒ"µ÷ÕûÊÕÒôÆµÂÊ
+  36                     ÔÚÄ£Ê½6ÏÂ£ºÊýÂë¹ÜÏÔÊ¾       "       ¾àÀëÖµ£¨cm£©"  £¬µ¼º½°´¼üÎÞ²Ù×÷ 
+  37                     ÔÚÄ£Ê½7ÏÂ£ºÊýÂë¹ÜÏÔÊ¾       "³ÆÖØADCÖµ£¨·ûºÅÊý£©"  £¬µ¼º½°´¼üÎÞ²Ù×÷  
+  38               3£¬°´¼ü1£¨°´ÏÂÊ±£©£ººìÍâÏòÍâ·¢ËÍ "´ó¼ÒºÃ£¡"¡£ÆäËü"STC-BÑ§Ï°°å"£¨ÈçÓÃ±¾³ÌÐò£©ÓÃ´®¿ÚÖúÊÖ£¨ÉèÖÃ²¨ÌØÂÊ120
+             -0bps£¬ÎÄ±¾½ÓÊÕ·½Ê½£©¿É¿´µ½½ÓÊÕµ½µÄ"´ó¼ÒºÃ£¡"ÎÄ±¾    
+  39                  °´¼ü3£¨Ì§ÆðÊ±£©£º´®¿Ú1Ïò¼ÆËã»ú·¢ËÍ ³ÌÐòÔËÐÐÐÔÄÜ²ÎÊý¡£ÐÔÄÜ²ÎÊýÃèÊö£º³ÌÐòÖ÷Ñ­»·Ã¿Ãë´ÎÊý¡¢Ã¿ÃëÓÃ»§³ÌÐ
+             -òµ÷¶È¶ªÊ§Êý   
+  40               4£¬Õñ¶¯´«¸ÐÆ÷£º£¨Èç¹ûÓÐÒôÀÖ²¥·Å£©¿ØÖÆÒôÀÖ²¥·Å"ÔÝÍ£/¼ÌÐø"
+  41               5£¬»ô¶û´«¸ÐÆ÷£ºÓÐ´Å³¡½Ó½üÊ±£¬£¨Èç¹û·äÃùÆ÷¿ÕÏÐ£©·¢Éù±¨¾¯£¨1350Hz£¬·¢1ÃëÊ±¼ä£©
+  42               6£¬´®¿Ú1£ºÓë¼ÆËã»úË«ÏòÍ¨ÐÅ£¨²¨ÌØÂÊ1200bps£©
+  43                         Èç¹ûÊÕµ½Ò»¸ö"AA 55"¿ªÍ·¡¢´óÐ¡8×Ö½ÚÊý¾Ý°ü£¬Ôò½«µÚ7×Ö½Ú+1£¬ÔÙÒÔ²¨ÌØÂÊ2400bpsÏò´®¿Ú2£¨485¡¢EXT¿É
+             -Ñ¡£©×ª·¢´ËÊý¾Ý°ü
+  44                         Èç¹ûºìÍâ½Ó¿ÚÊÕµ½Êý¾Ý°ü£¨Òýµ¼Âë+Êý¾Ý+½áÊøÂë£©£¬ÔòÏò´®¿Ú1×ª·¢
+  45               7£¬´®¿Ú2£º¿ÉÑ¡Ôñ485£¨Ë«Ïòµ¥¹¤£©¡¢EXT£¨TTL Uart£¬Ë«ÏòË«¹¤£©Á½¸öÎ»ÖÃ£¬¹¤×÷²¨ÌØÂÊ2400bps
+  46                         Èç¹ûÊÕµ½Ò»¸ö"AA 55"¿ªÍ·¡¢´óÐ¡8×Ö½ÚÊý¾Ý°ü£¬Ôò½«µÚ7×Ö½Ú+2£¬ÔÙÏòºìÍâIr¿Ú×ª·¢´ËÊý¾Ý°ü£¨NEC_R05d±à
+             -ÂëÐ­Òé£©
+C51 COMPILER V9.51   MAIN                                                                  09/12/2021 22:56:21 PAGE 2   
+
+  47               8£¬ºìÍâÊÕ·¢½Ó¿Ú£º
+  48                         Èç¹ûºìÍâ½Ó¿ÚÊÕµ½Êý¾Ý°ü£¨Òýµ¼Âë+Êý¾Ý+½áÊøÂë£©£¬Ôò·äÃùÆ÷·¢Éù£¨1000Hz£¬300mS£©£¬²¢Ïò´®¿Ú1×ª·¢£»
+  49                         Èç¹ûÊý¾Ý°ü°üÍ·Îª"AA 55"£¬²¢£ºµÚ3×Ö½ÚÎª F1£¬Ôòµ÷ÕûÊÕÒôÆµÂÊ£¨µÚ4¡¢5×Ö½Ú£¬BCDÂë£¬ÊÕÒôÆµÂÊÖµ£¬0
+             -.1MHz£©£¨Êý¾ÝÐèÓÐÐ§£º887¡«1080£©£¬
+  50                                                                              ÒôÁ¿£¨µÚ6×Ö½ÚÊý¾Ý£©£¨Êý¾ÝÐèÓÐÐ§£º0¡«15£©     
+             -  £¬µÚ7×Ö½Ú+4
+  51                                                      µÚ3×Ö½ÚÎª F2£¬Ôòµ÷ÕûRTCÊ±·ÖÃë£¨µÚ4¡¢5¡¢6×Ö½ÚÊý¾Ý£¬BCDÂë£©£¨Êý¾ÝÐèÓÐÐ§
+             -£©£¬µÚ7×Ö½Ú+4
+  52                                                      µÚ3×Ö½ÚÎª F3£¬Ôòµ÷ÕûRTCÄêÔÂÈÕ£¨µÚ4¡¢5¡¢6×Ö½ÚÊý¾Ý£¬BCDÂë£©£¨Êý¾ÝÐèÓÐÐ§£©£¬µÚ7×Ö½Ú+4
+  53                                                  µ÷ÕûÖµ´æÈëNVM£¬
+  54                                                  ·äÃùÆ÷·¢Éù£¨1000Hz£¬600mS£©
+  55                                                  ²¢Ïò´®¿Ú1×ª·¢£»
+  56          
+  57          Éè¼Æ£ºÐì³É£¨µç»°£º18008400450£©    2021Äê9ÔÂ5ÈÕ
+  58          **********************************************************************************************************
+             -*****************/
+  59          
+  60          
+  61          //******* ÓÃ»§³ÌÐò¶Î1£ºÓÃ»§³ÌÐò°üº¬ÎÄ¼þ *************//
+  62          #include "main.H"                              //±ØÐë¡£±àÐ´Ó¦ÓÃ³ÌÐòÊ±£¬½öÐè¸ÄÐ´ main.h ºÍ main.cÎÄ¼þ 
+  63          #include "song.c"                              //¾ÙÀý¡£song.cÖÐ±àÐ´ÁËÒôÀÖ£¨Í¬Ò»Ê×¸è£©±àÂë
+  64          //******* ÓÃ»§³ÌÐò¶Î2£ºÓÃ»§×Ô¶¨Òåº¯ÊýÉùÃ÷ *************//
+  65          
+  66          
+  67          //******* ÓÃ»§³ÌÐò¶Î3£ºÓÃ»§³ÌÐòÈ«¾Ö±äÁ¿¶¨Òå *************//
+  68          struct_DS1302_RTC t={0x30,0,9,0x06,9,1,0x21};  //¾ÙÀý¡£ ÊµÊ±Ê±ÖÓÊý¾Ý½á¹¹£ºÃë¡¢·Ö¡¢Ê±¡¢ÈÕ¡¢ÔÂ¡¢ÖÜ¡¢Äê¡£³õÖµ
+             -£º2021Äê9ÔÂ6ÈÕ£¬ÖÜÒ»£¬9£º00£º30
+  69          struct_FMRadio    FM;                          //¾ÙÀý¡£ FMÊÕÒô»úÊý¾Ý½á¹¹£ºÊÕÒôÆµÂÊ¡¢ÒôÁ¿¡¢GP1¡¢GP2¡¢GP3¡£³
+             -õÖµ£º95.5MHz£¬ÒôÁ¿5£¬Ãð¡¢Ãð¡¢ÁÁ
+  70          struct_SysPerF    SysPer;                      //¾ÙÀý¡£ ÏµÍ³ÐÔÄÜÊý¾Ý½á¹¹£ºÃ¿ÃëÖ÷Ñ­»·´ÎÊý4×Ö½Ú¡¢Ã¿ÃëÂÖÑ¯¶ªÊ
+             -§´ÎÊý1×Ö½Ú
+  71          struct_ADC        ADCresult;                   //¾ÙÀý¡£ ÈÈÃô¡¢¹âÃô²âÁ¿ADÖµ           
+  72          unsigned char Music_tone,Music_PM;             //¾ÙÀý¡£ ÒôÀÖ²¥·ÅÒôµ÷¡¢½Ú´Õ£¨Ã¿·ÖÖÓ½ÚÅÄÊý£©
+  73          
+  74          unsigned char rxd[8];                          //¾ÙÀý¡£Í¨ÐÅ£¨´®¿Ú1¡¢´®¿Ú2¡¢ºìÍâ¹²ÓÃ£©»º³åÇø8×Ö½Ú
+  75          unsigned char rxdhead[2]={0xaa,0x55};          //¾ÙÀý¡£Í¨ÐÅ£¨´®¿Ú1¡¢´®¿Ú2£©½ÓÊÕ°üÍ·Æ¥Åä×Ö·û2×Ö½Ú£º£¨0xAA£¬
+             -0x55£©    
+  76          
+  77          unsigned char funcmode;                  //¾ÙÀý¡£¶¨ÒåÏÔÊ¾¡¢°´¼ü¹¦ÄÜÄ£Ê½
+  78          enum funcname {RTC_YMD=1,                      //¾ÙÀý¡£¹¦ÄÜÄ£Ê½ÃüÃû¡£ÊµÊ±Ê±ÖÓ£ºÄêÔÂÈÕ
+  79                         RTC_HMS,                        //                    ÊµÊ±Ê±ÖÓ£ºÊ±·ÖÃë
+  80                         Rt_Rop,                         //                    ÈÈÃô¹âÃô²âÁ¿
+  81                         Music,                          //                    ÒôÀÖ²¥·Å
+  82                         FMradio,                        //                    FMÊÕÒô»ú
+  83                         UltroSonic,                     //                    ³¬Éù²¨²â¾à
+  84                         Weight};                        //                    µç×Ó³Ó
+  85          unsigned char tempadj;                   //¾ÙÀý¡£³ÌÐò±äÁ¿¡£µ÷ÕûÊ±ÖÓÊ±ÓÃ£º=1 µ÷Äê»òÊ±£»=2 µ÷ÔÂ»ò·Ö =3 µ÷ÈÕ 
+             -»òÃë
+  86          
+  87          //******* ÓÃ»§³ÌÐò¶Î4£ºÓÃ»§×Ô¶¨Òåº¯ÊýÔ­ÐÍ *************//
+  88          #include "function.c" 
+  89          
+  90          void myUart1Rxd_callback()                    //¾ÙÀý¡£´®¿Ú1ÊÕµ½ºÏ·¨Êý¾Ý°ü»Øµ÷º¯Êý¡££¨ºÏ·¨Êý¾Ý°ü£ºAA£¬55£¬.
+             -.....¡£¹²8×Ö½Ú£©
+  91          { if ( GetUart2TxStatus() == enumUart2TxFree )                  
+  92   1          { (*(rxd+6)) += 1;                                          //µÚ7×Ö½Ú¼Ó1
+  93   2             Uart2Print(&rxd, sizeof(rxd));                           //½«Êý¾Ý°ü´Ó´®¿Ú2(485¡¢»òEXTÀ©Õ¹½Ó¿ÚÉÏ)·¢ËÍ
+             -³öÈ¥
+  94   2          }     
+  95   1      }
+  96          
+  97          void myUart2Rxd_callback()                    //¾ÙÀý¡£´®¿Ú2ÊÕµ½ºÏ·¨Êý¾Ý°ü»Øµ÷º¯Êý¡££¨ºÏ·¨Êý¾Ý°ü£ºAA£¬55£¬.
+C51 COMPILER V9.51   MAIN                                                                  09/12/2021 22:56:21 PAGE 3   
+
+             -.....¡£¹²8×Ö½Ú£©
+  98          { if ( GetIrStatus() == enumIrFree ) 
+  99   1         { (*(rxd+6)) += 2;                                             //µÚ7×Ö½Ú¼Ó2
+ 100   2           IrPrint(&rxd, sizeof(rxd));                                  //½«Êý¾Ý°ü´ÓºìÍâ·¢ËÍ³öÈ¥
+ 101   2         }
+ 102   1      }
+ 103          
+ 104          void myIrRxd_callback()                      //¾ÙÀý¡£ºìÍâÊÕµ½Êý¾Ý°ü»Øµ÷º¯Êý¡££¨ÓÐºìÍâÇ°µ¼+Êý¾Ý+½áÊø£¬NEC_R
+             -05d±àÂë£©  
+ 105          { dealwithIrRxd();  
+ 106   1      }
+ 107          
+ 108          void my1mS_callback()                       //¾ÙÀý¡£1mSÊÂ¼þ»Øµ÷º¯Êý
+ 109          {  
+ 110   1      }
+ 111            
+ 112          void my10mS_callback()                      //¾ÙÀý¡£10mSÊÂ¼þ»Øµ÷º¯Êý
+ 113          { 
+ 114   1      }
+ 115          
+ 116          void my100mS_callback()                     //¾ÙÀý¡£100mSÊÂ¼þ»Øµ÷º¯Êý
+ 117          { dealwithDisp();                          
+ 118   1      }      
+ 119                         
+ 120          void my1S_callback()                       //¾ÙÀý¡£1SÊÂ¼þ»Øµ÷º¯Êý
+ 121          {   
+ 122   1      }
+ 123          
+ 124          void myADC_callback()                      //¾ÙÀý¡£ADCÊÂ¼þ»Øµ÷º¯Êý
+ 125          { 
+ 126   1      }
+ 127          
+ 128          void myKN_callback()                                                                              //¾ÙÀý¡£µ¼º
+             -½°´¼üÊÂ¼þ»Øµ÷º¯Êý
+ 129          { dealwithmyKN();   
+ 130   1      }
+ 131          
+ 132          void mykey_callback()                               // °´¼ü£¨Key1¡¢Key2£©ÊÂ¼þ»Øµ÷º¯Êý
+ 133          { dealwithmykey();    
+ 134   1      }
+ 135          
+ 136          void myhall_callback()                                                                    //Ê¾Àý¡£ÓÐhallÊÂ¼þ
+             -»Øµ÷º¯Êý£º·¢Éù±¨¾¯
+ 137          { if(GetHallAct() == enumHallGetClose) SetBeep(1350,100);   
+ 138   1      }
+ 139          
+ 140          void mySV_callback()                                                                      //Ê¾Àý: Õñ¶¯ÊÂ¼þ»Ø
+             -µ÷º¯Êý£º¿ØÖÆÒôÀÖ²¥·Å/ÔÝÍ£
+ 141          { if(GetVibAct())
+ 142   1        if (GetPlayerMode() == enumModePause) SetPlayerMode(enumModePlay); 
+ 143   1            else  SetPlayerMode(enumModePause);     
+ 144   1      }
+ 145          
+ 146          //******* main()º¯Êý *************//  
+ 147          void main() {         //Ö÷º¯Êý main() ¿ªÊ¼         //´ËÐÐ±ØÐë£¡£¡£¡ 
+ 148   1        
+ 149   1      //******* ÓÃ»§³ÌÐò¶Î5£ºÓÃ»§main()º¯ÊýÄÚ²¿¾Ö²¿±äÁ¿¶¨Òå *************//
+ 150   1        
+ 151   1      //******* ÓÃ»§³ÌÐò¶Î6£ºÓÃ»§main()º¯Êý£¨³õÊ¼»¯Àà³ÌÐò£© *************//   
+ 152   1      //1,¼ÓÔØÐèÒªÓÃµÄÄ£¿é(ÓÉ¸÷Ä£¿éÌá¹©¼ÓÔØº¯Êý)
+ 153   1          Key_Init();                                      //¾ÙÀý£¬ÐèÒªÓÃµ½µÄÄ£¿é¼°Æäº¯Êý¡¢·½·¨£¬±ØÐë¶ÔÆä³õÊ¼»¯£
+             -¨ÈÃÆä×¼±¸¡¢¾ÍÐ÷ºÍÏìÓ¦×öºóÌ¨·þÎñ£©
+C51 COMPILER V9.51   MAIN                                                                  09/12/2021 22:56:21 PAGE 4   
+
+ 154   1          HallInit();                                      //¾ÙÀý
+ 155   1          VibInit();                                       //¾ÙÀý
+ 156   1          DisplayerInit();                                 //¾ÙÀý
+ 157   1          BeepInit();                                      //¾ÙÀý
+ 158   1          MusicPlayerInit();                               //¾ÙÀý
+ 159   1          AdcInit(ADCexpEXT);                              //¾ÙÀý£¬ADCÄ£¿é³õÊ¼»¯£¬ÓÐ²ÎÊý£¬Ñ¡ÔñÀ©Õ¹½Ó¿ÚEXTÉÏP1.0¡¢
+             -P1.1ÊÇ·ñÒ²×öADC¹¦ÄÜ
+ 160   1          StepMotorInit();                                 //¾ÙÀý£¬²½½øµç»ú³õÊ¼»¯
+ 161   1          DS1302Init(t);                                   //¾ÙÀý£¬DS1302³õÊ¼»¯
+ 162   1            
+ 163   1          IrInit(NEC_R05d);                                //¾ÙÀý£¬ºìÍâ½Ó¿ÚÉèÖÃ
+ 164   1          /******* ÒÔÏÂ¿É4Ñ¡1£º¼ÓÔØEXT½Ó¿Ú ********/    
+ 165   1      //    EXTInit(enumEXTWeight);                          //¾ÙÀý£¬EXT³õÊ¼»¯³Éµç×Ó³Ó¹¦ÄÜ
+ 166   1      //    EXTInit(enumEXTPWM);                             //¾ÙÀý£¬EXT³õÊ¼»¯³ÉÁ½Â·PWM¹¦ÄÜ
+ 167   1      //    EXTInit(enumEXTDecode);                          //¾ÙÀý£¬EXT³õÊ¼»¯³ÉÔöÁ¿Ê½±àÂëÆ÷½âÂë¹¦ÄÜ£¨Èç£ºÐý×ª±à
+             -ÂëÆ÷£©
+ 168   1      //    EXTInit(enumEXTUltraSonic);                      //¾ÙÀý£¬EXT³õÊ¼»¯³É³¬Éù²¨²â¾à¹¦ÄÜ
+ 169   1          Uart1Init(1200);                                 //¾ÙÀý£¬´®¿Ú1³õÊ¼»¯£¬ÓÐ²ÎÊý£¬ÉèÖÃUart1Í¨ÐÅ²¨ÌØÂÊ
+ 170   1          /******* ÒÔÏÂ¿É2Ñ¡1£º¼ÓÔØ´®¿Ú2 ********/    
+ 171   1          Uart2Init(2400,Uart2Usedfor485);                 //¾ÙÀý£¬´®¿Ú2³õÊ¼»¯µ½485½Ó¿Ú£¨RS485¹¤ÒµÏÖ³¡×ÜÏß£¬°ëË«
+             -¹¤£©
+ 172   1      //    Uart2Init(2400,Uart2UsedforEXT);               //¾ÙÀý£¬´®¿Ú2³õÊ¼»¯µ½EXT½Ó¿Ú£¨TTL Uart´®ÐÐÍ¨ÐÅ¿Ú£©
+ 173   1          
+ 174   1      //2,ÉèÖÃÊÂ¼þ»Øµ÷º¯Êý(ÓÉsysÌá¹©ÉèÖÃº¯ÊýSetEventCallBack()) 
+ 175   1          SetEventCallBack(enumEventKey, mykey_callback);            //¾ÙÀý
+ 176   1          SetEventCallBack(enumEventSys1mS, my1mS_callback);         //¾ÙÀý
+ 177   1          SetEventCallBack(enumEventSys10mS, my10mS_callback);       //¾ÙÀý
+ 178   1          SetEventCallBack(enumEventSys100mS, my100mS_callback);     //¾ÙÀý
+ 179   1          SetEventCallBack(enumEventSys1S, my1S_callback);           //¾ÙÀý
+ 180   1          SetEventCallBack(enumEventHall, myhall_callback);          //¾ÙÀý
+ 181   1          SetEventCallBack(enumEventVib, mySV_callback);             //¾ÙÀý
+ 182   1          SetEventCallBack(enumEventNav, myKN_callback);             //¾ÙÀý£¬ÉèÖÃµ¼º½°´¼ü»Øµ÷º¯Êý
+ 183   1          SetEventCallBack(enumEventUart1Rxd, myUart1Rxd_callback);  //¾ÙÀý£¬ÉèÖÃ´®¿Ú1½ÓÊÕ»Øµ÷º¯Êý
+ 184   1          SetEventCallBack(enumEventUart2Rxd, myUart2Rxd_callback);  //¾ÙÀý£¬ÉèÖÃ´®¿Ú2½ÓÊÕ»Øµ÷º¯Êý
+ 185   1          SetEventCallBack(enumEventXADC,myADC_callback);            //À©Õ¹½Ó¿ÚÉÏÐÂµÄADÖµÊÂ¼þ
+ 186   1          SetEventCallBack(enumEventIrRxd,myIrRxd_callback);         //ºìÍâIrÉÏÊÕµ½Ò»¸öÊý¾Ý°ü
+ 187   1      
+ 188   1      //3,ÓÃ»§³ÌÐò×´Ì¬³õÊ¼»¯  
+ 189   1          SetDisplayerArea(0,7);                           //¾ÙÀý
+ 190   1          SetUart1Rxd(&rxd, sizeof(rxd), rxdhead, sizeof(rxdhead));   //ÉèÖÃ´®¿Ú½ÓÊÕ·½Ê½£ºÊý¾Ý°üÌõ¼þ£º½ÓÊÕÊý¾Ý°ü·
+             -ÅÖÃÔÚrxdÖÐ£¬Êý¾Ý°ü´óÐ¡rxd´óÐ¡£¬Êý¾Ý°üÍ·ÐèÒªÓërxdheadÆ¥Åä£¬Æ¥ÅäÊýÁ¿rxdhead´óÐ¡
+ 191   1          SetUart2Rxd(&rxd, sizeof(rxd), rxdhead, sizeof(rxdhead)); 
+ 192   1          SetIrRxd(&rxd);                                     //¾ÙÀý
+ 193   1          
+ 194   1      //4,ÓÃ»§³ÌÐò±äÁ¿³õÊ¼»¯
+ 195   1          FM=FM_NVMread();                              //¾ÙÀý£¬FMRadio³õÊ¼»¯¡£
+ 196   1          FMRadioInit(FM);  
+ 197   1          
+ 198   1          Music_PM=90;
+ 199   1          Music_tone=0xFC;
+ 200   1          funcmode = M24C02_Read(0x00);                               
+ 201   1          LedPrint(funcmode); 
+ 202   1          
+ 203   1      /*****************  MySTC_OS ³õÊ¼»¯Óë¼ÓÔØ¿ªÊ¼  ********************************/   
+ 204   1          MySTC_Init();     // MySTC_OS ³õÊ¼»¯         //´ËÐÐ±ØÐë£¡£¡£¡   
+ 205   1        while(1)            // ÏµÍ³Ö÷Ñ­»·              //´ËÐÐ±ØÐë£¡£¡£¡     
+ 206   1          { MySTC_OS();     // MySTC_OS ¼ÓÔØ           //´ËÐÐ±ØÐë£¡£¡£¡
+ 207   2      /*****************  MySTC_OS ³õÊ¼»¯Óë¼ÓÔØ½áÊø  ********************************/  
+ 208   2            
+ 209   2      //******* ÓÃ»§³ÌÐò¶Î7£ºÓÃ»§main()º¯Êý£¨Ö÷Ñ­»·³ÌÐò£© *************//
+ 210   2            
+ 211   2            
+C51 COMPILER V9.51   MAIN                                                                  09/12/2021 22:56:21 PAGE 5   
+
+ 212   2          }               //Ö÷Ñ­»·while(1)½áÊø         //´ËÐÐ±ØÐë£¡£¡£¡ 
+ 213   1      }                   //Ö÷º¯Êý main() ½áÊø         //´ËÐÐ±ØÐë£¡£¡£¡ 
+ 214          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   3040    ----
+   CONSTANT SIZE    =    199    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     43      23
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

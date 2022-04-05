@@ -1,0 +1,761 @@
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE ZSL_PR
+OBJECT MODULE PLACED IN zsl_pr.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE zsl_pr.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          /*
+   2            ???????????
+   3              ZSL 201808010205
+   4             ??????????????????24C02(????????)
+   5             ??——????????A/D???????? 
+   6          */ 
+   7          #include <STC15F2K60S2.h>
+   8          #include <intrins.h>
+   9          /*---------???---------*/
+  10          #define uint unsigned int
+  11          #define uchar unsigned char
+  12          #define FOSC 11059200L  //????
+  13          #define T_ms 0.1        //?????0.1ms
+  14          #define NMAX_KEY 10
+  15          #define cstAdcPower 0X80     /*ADC????*/
+  16          #define cstAdcFlag 0X10      /*?A/D?????,cstAdcFlag?????*/
+  17          #define cstAdcStart 0X08     /*?A/D?????,cstAdcStart?????,??????????,?????*/
+  18          #define cstAdcSpeed90 0X60   /*ADC???? 90?????????*/
+  19          #define cstAdcChs17 0X07     /*??P1.7??A/D??*/
+  20          #define cstBaud1     9600       //???
+  21          
+  22          /*???*/
+  23          sbit Key1 = P3 ^ 2;    
+  24          sbit Key2 = P3 ^ 3; 
+  25          //sbit Key3 = P1 ^ 7;        
+  26          sbit led = P2 ^ 3;      //LED?????????
+  27          sbit SDA = P4 ^ 0;      //I2C??????
+  28          sbit SCL = P5 ^ 5;      //I2C??????
+  29          sbit Beep = P3 ^ 4;
+  30          /*????*/
+  31          uchar duan[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f, 0x77, 0x7c, 0x39, 0x5e, 0x79, 
+             -0x71}; //?????,??0-f
+  32          uchar wei[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}; //?????
+  33          uchar origin[]={0x00,0x00,0x40,0x76,0x79,0x38,0x38,0x3f}; 
+  34          uchar error[]={0x00,0x00,0x40,0x79,0x77,0x77,0x3f,0x77};
+  35          uchar open[]={0x00,0x00,0x40,0x40,0x3f,0x73,0x79,0x37};
+  36          uchar x=0x00;
+  37          uchar s=0x00;
+  38          /*????*/ 
+  39          uchar flag1 = 0x00;                //?????????(??)
+  40          uchar flag2 = 0xff;     //???????????(??0-7?????4-7)
+  41          uchar flag3 = 0x00;     //???????? 
+  42          uchar addr ;           //????
+  43          uchar date[]={0x00,0x00,0x00,0x00};           //????(?????) 
+  44          uchar read_date[]={0x00,0x00,0x00,0x00};            //????
+  45          uchar ui_state ;        //????(??6??????)  
+  46          bit btKey3Flag=0;             /*key3?????*/
+  47          bit btUart1SendBusy = 0 ;   //?????? 
+  48          bit btBeepFlag=0; 
+  49          uchar date_yx = 0x00;
+  50          //??????? 
+  51          void SMG0(uchar date,uchar * show)
+  52          {
+  53   1        switch( flag1 )
+  54   1          {
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 2   
+
+  55   2              case 0:
+  56   2                  P0 = P0 | duan[date / 16];   break;
+  57   2              case 1:
+  58   2                  P0 = P0 | duan[date % 16];   break;
+  59   2              default:
+  60   2                  P0 = P0 | show[flag1];   break;
+  61   2          }
+  62   1      }
+  63          void SMG1( uchar date1, uchar date2,uchar date3) //??????? 1
+  64          {
+  65   1          switch( flag1 )
+  66   1          {
+  67   2              case 0:
+  68   2                  P0 = P0 | duan[date1 / 16];   break;
+  69   2              case 1:
+  70   2                  P0 = P0 | duan[date1 % 16];   break;
+  71   2              case 2:
+  72   2                  P0 = 0x40;   break;
+  73   2              case 3:
+  74   2                P0 = 0x40;   break;
+  75   2              case 4:
+  76   2                  P0 = P0 | duan[date2 / 16];   break;
+  77   2              case 5:
+  78   2                  P0 = P0 | duan[date2 % 16];   break;
+  79   2              case 6:
+  80   2                  P0 = P0 | duan[date3 / 16];    break;
+  81   2              default:
+  82   2                  P0 = P0 | duan[date3 % 16];   break;
+  83   2          }
+  84   1      }
+  85          void SMG2(uchar date1, uchar date2,uchar date3,uchar date4)
+  86          {
+  87   1          switch( flag1 )
+  88   1          {
+  89   2              case 0:
+  90   2                  P0 = P0 | duan[date1 / 16];   break;
+  91   2              case 1:
+  92   2                  P0 = P0 | duan[date1 % 16];   break;
+  93   2              case 2:
+  94   2                  P0 = P0 | duan[date2 / 16];   break;
+  95   2              case 3:
+  96   2                P0 = P0 | duan[date2 % 16];   break;
+  97   2              case 4:
+  98   2                  P0 = P0 | duan[date3 / 16];   break;
+  99   2              case 5:
+ 100   2                  P0 = P0 | duan[date3 % 16];   break;
+ 101   2              case 6:
+ 102   2                  P0 = P0 | duan[date4 / 16];    break;
+ 103   2              default:
+ 104   2                  P0 = P0 | duan[date4 % 16];   break;
+ 105   2          }
+ 106   1      }
+ 107          void Timer_T0() interrupt 1  //???0????
+ 108          {       
+ 109   1          if( flag1 == 8)
+ 110   1          {
+ 111   2              led=1;
+ 112   2          P0=ui_state+1;
+ 113   2          flag1 = 0;
+ 114   2          return;
+ 115   2          }
+ 116   1          led=0;     //??? 
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 3   
+
+ 117   1          P2 = wei[flag1];
+ 118   1          //if (ui_state == 0x80) flag2 = flag1;
+ 119   1          if (flag1 == flag2 )  P0=0x80;
+ 120   1          else P0=0x00;
+ 121   1        if(ui_state==0x00)      //???? 
+ 122   1          SMG0(addr,origin);
+ 123   1        else if(ui_state==0x01||ui_state==0x04)   //???? ||???? 
+ 124   1          SMG1(addr,date[2],date[3]);
+ 125   1        else if(ui_state==0x03||ui_state==0x05||ui_state==0x08)   //????||???? 
+ 126   1          SMG2(date[0],date[1],date[2],date[3]);
+ 127   1        else if(ui_state==0x02)   //????
+ 128   1          SMG0(addr,error) ;
+ 129   1        else if(ui_state==0x06)     //06
+ 130   1          SMG0(addr,open);
+ 131   1        else if(ui_state == 0x80)   //???? 
+ 132   1          SMG0(addr,origin);
+ 133   1        else P0=0x40;         //??????-------- 
+ 134   1        
+ 135   1         if( btBeepFlag )
+ 136   1              Beep = ~Beep;            //???????????
+ 137   1          else
+ 138   1              Beep = 0;  
+ 139   1        flag1++;
+ 140   1      }
+ 141          
+ 142          /*---------??4us???--------*/
+ 143          void delay()        
+ 144          {
+ 145   1          ;;
+ 146   1      }
+ 147          /*---------??5ms???--------*/
+ 148          void Delay5ms()     //@11.0592MHz  ??5ms
+ 149          {
+ 150   1          unsigned char i, j;
+ 151   1          i = 54;
+ 152   1          j = 199;
+ 153   1          do
+ 154   1          {
+ 155   2              while ( --j );
+ 156   2          }
+ 157   1          while ( --i );
+ 158   1      }
+ 159          /*---------??100ms???--------*/
+ 160          void Delayms(uint i)      
+ 161          {
+ 162   1        while(i--)
+ 163   1        { 
+ 164   2          int n=500;
+ 165   2          while (n--)
+ 166   2            {
+ 167   3                _nop_();
+ 168   3                _nop_();
+ 169   3                _nop_();
+ 170   3                _nop_();
+ 171   3                _nop_();
+ 172   3            _nop_();
+ 173   3            }
+ 174   2        }
+ 175   1      }
+ 176          
+ 177          void IIC_init()     //I2C?????
+ 178          {
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 4   
+
+ 179   1          SCL = 1;
+ 180   1          delay();
+ 181   1          SDA = 1;
+ 182   1          delay();
+ 183   1      }
+ 184          void start()        //??????
+ 185          {
+ 186   1          SDA = 1;
+ 187   1          delay();
+ 188   1          SCL = 1;
+ 189   1          delay();
+ 190   1          SDA = 0;
+ 191   1          delay();
+ 192   1      }
+ 193          void stop()         //????
+ 194          {
+ 195   1          SDA = 0;
+ 196   1          delay();
+ 197   1          SCL = 1;
+ 198   1          delay();
+ 199   1          SDA = 1;
+ 200   1          delay();
+ 201   1      }
+ 202          void respons()      //??????
+ 203          {
+ 204   1          uchar i = 0;
+ 205   1          SCL = 1;
+ 206   1          delay();
+ 207   1          //????????????????????
+ 208   1          //????????????????????????
+ 209   1          while( SDA == 1 && ( i < 255 ) ) 
+ 210   1              i++;                
+ 211   1          SCL = 0;
+ 212   1          delay();
+ 213   1      }
+ 214          void writebyte( uchar date ) //?24C02???????
+ 215          {
+ 216   1          uchar i, temp;
+ 217   1          temp = date;
+ 218   1          for( i = 0; i < 8; i++ )
+ 219   1          {
+ 220   2              temp = temp << 1;
+ 221   2              SCL = 0;
+ 222   2              delay();
+ 223   2              SDA = CY;
+ 224   2              delay();
+ 225   2              SCL = 1;
+ 226   2              delay();
+ 227   2          }
+ 228   1          SCL = 0;
+ 229   1          delay();
+ 230   1          SDA = 1;
+ 231   1          delay();
+ 232   1      }
+ 233          uchar readbyte()            //?24C02???????
+ 234          {
+ 235   1          uchar i, k;
+ 236   1          SCL = 0;
+ 237   1          delay();
+ 238   1          SDA = 1;
+ 239   1          delay();
+ 240   1          for( i = 0; i < 8; i++ )
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 5   
+
+ 241   1          {
+ 242   2              SCL = 1;
+ 243   2              delay();
+ 244   2              k = ( k << 1 ) | SDA;
+ 245   2              delay();
+ 246   2              SCL = 0;
+ 247   2              delay();
+ 248   2          }
+ 249   1          delay();
+ 250   1          return k;
+ 251   1      }
+ 252          void write_add( uchar addr, uchar date ) //?24C02???addr,??????date
+ 253          {
+ 254   1          start();
+ 255   1          writebyte( 0xa0 );
+ 256   1          respons();
+ 257   1          writebyte( addr );
+ 258   1          respons();
+ 259   1          writebyte( date );
+ 260   1          respons();
+ 261   1          stop();
+ 262   1      }
+ 263          uchar read_add( uchar addr )      //?24C02?addr??,???????
+ 264          {
+ 265   1        
+ 266   1          uchar date;
+ 267   1          start();
+ 268   1          writebyte( 0xa0 );
+ 269   1          respons();
+ 270   1          writebyte( addr );
+ 271   1          respons();
+ 272   1          start();
+ 273   1          writebyte( 0xa1 );
+ 274   1          respons();
+ 275   1          date = readbyte();
+ 276   1          stop();
+ 277   1          return date;
+ 278   1      }
+ 279          
+ 280          /*---------??1?????--------*/
+ 281          void Uart1_Init()
+ 282          {
+ 283   1          AUXR = 0X80; //????? ?????0???????12?,??? ,1T??,T0x12=1,
+ 284   1          SCON |= 0X50; //????
+ 285   1          TL1 = ( 65536 - ( FOSC / 4 / cstBaud1 ) );
+ 286   1          TH1 = ( 65536 - ( FOSC / 4 / cstBaud1 ) ) >> 8;
+ 287   1          AUXR |= 0X40; //????? ?????1???????12?,???
+ 288   1          RI = 0;      //???????
+ 289   1          TI = 0;      //???????
+ 290   1          TR1 = 1;     //?????1
+ 291   1          ES = 0;      //??????????? 
+ 292   1          EA = 1;      //??????
+ 293   1          PS = 1 ;    //??1??????
+ 294   1      }
+ 295          void Timer0_Init()       //???0???
+ 296          {
+ 297   1          TMOD = 0x00;        //???0????0,16???????
+ 298   1          EA = 1;             //????
+ 299   1          ET0 = 1;            //????0??
+ 300   1          TH0 = ( 65536 - T_ms * FOSC / 1000 ) / 256;  //???????
+ 301   1          TL0 = ( 65536 - T_ms * FOSC / 1000 );  
+ 302   1          TR0 = 1;                              //?????
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 6   
+
+ 303   1      }
+ 304          
+ 305          void init()       //IO????,?????
+ 306          {
+ 307   1          P2M1 = 0x00;    //??P0??P2^3????
+ 308   1          P2M0 = 0x08;
+ 309   1          P0M1 = 0x00;
+ 310   1          P0M0 = 0xff;    //??????
+ 311   1          P3M0 = 0x00;
+ 312   1          P3M1 = 0x00;
+ 313   1          
+ 314   1          P1ASF = 0x80;       //P1.7??????A/D??
+ 315   1          ADC_RES = 0;        //??????
+ 316   1          ADC_CONTR = 0x8F;   //cstAdcPower = 1
+ 317   1          CLK_DIV = 0X00;     //ADRJ = 0    ADC_RES???????
+ 318   1          
+ 319   1          led = 0;        //?LED??
+ 320   1          P0 = 0x00;
+ 321   1        Beep=0;            //??????
+ 322   1          addr = 0x00;      //???????
+ 323   1          ui_state=0x00;    //???? 
+ 324   1          btKey3Flag=0;
+ 325   1          Delayms(20); 
+ 326   1      }
+ 327          
+ 328          /*---------??????--------*/
+ 329          void SendData( unsigned char dat )
+ 330          {
+ 331   1          while( btUart1SendBusy ); //???????UART1????PC?
+ 332   1          btUart1SendBusy = 1;
+ 333   1          SBUF = dat;
+ 334   1      }
+ 335          /*---------??1??????--------*/
+ 336          void Uart1_Process() interrupt 4 using 1
+ 337          {
+ 338   1          if( RI && flag3 ==0x00)         //?????? RI???1
+ 339   1          {
+ 340   2              RI = 0;   
+ 341   2          date[0] = SBUF;
+ 342   2          flag3 =0x01;
+ 343   2          }
+ 344   1          else if( RI && flag3 ==0x01 ){
+ 345   2            RI = 0;   
+ 346   2          date[1] = SBUF;
+ 347   2          flag3 = 0x02;
+ 348   2        }
+ 349   1        else if( RI && flag3 ==0x02 ){
+ 350   2            RI = 0;   
+ 351   2          date[2] = SBUF;
+ 352   2          flag3 = 0x03;
+ 353   2        }
+ 354   1        else if( RI && flag3 ==0x03 ){
+ 355   2            RI = 0;   
+ 356   2          date[3] = SBUF;
+ 357   2          flag3 =0x00;
+ 358   2        }
+ 359   1          else 
+ 360   1          if( TI )        //?????? RI???1
+ 361   1          {
+ 362   2              TI = 0;   btUart1SendBusy = 0;
+ 363   2          }
+ 364   1      }
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 7   
+
+ 365          
+ 366          /*---------??AD????--------*/
+ 367          //?AD????,????A/D????(???IE?IP) 
+ 368          unsigned char GetADC()
+ 369          {
+ 370   1          uchar ucAdcRes;
+ 371   1          ADC_CONTR = cstAdcPower | cstAdcStart | cstAdcSpeed90 | cstAdcChs17;//???cstAdcFlag?1,????A/D????
+ 372   1          _nop_();
+ 373   1          _nop_();
+ 374   1          _nop_();
+ 375   1          _nop_();
+ 376   1          while( !( ADC_CONTR & cstAdcFlag ) ); //????A/D????
+ 377   1          ADC_CONTR &= ~cstAdcFlag;           //cstAdcFlagE???0
+ 378   1          ucAdcRes = ADC_RES;                 //??AD??
+ 379   1          return ucAdcRes;
+ 380   1      }
+ 381          /*---------??????????--------*/
+ 382          //???????5??2??4??1????3?????3(0),?????0x07,??????  (??????)
+ 383          //???????????????? 
+ 384          uchar NavKeyCheck()
+ 385          {
+ 386   1          unsigned char key;
+ 387   1          key = GetADC();     //??AD??
+ 388   1          if( key != 255 )    //??????
+ 389   1          {
+ 390   2              Delay5ms();
+ 391   2              key = GetADC();
+ 392   2              if( key != 255 )            //???? ??????
+ 393   2              {
+ 394   3                  key = key & 0xE0;       //???3?,?????
+ 395   3                  key = _cror_( key, 5 ); //????5? ??A/D??????,????
+ 396   3                  return key;
+ 397   3              }
+ 398   2          }
+ 399   1          return 0x07;        //??????????0x07
+ 400   1      }
+ 401          
+ 402          void NavKey_Process()
+ 403          {
+ 404   1          uchar ucNavKeyCurrent;  //?????????
+ 405   1          uchar ucNavKeyPast;     //?????????
+ 406   1      
+ 407   1          ucNavKeyCurrent = NavKeyCheck();    //????ADC?
+ 408   1          if( ucNavKeyCurrent != 0x07 )       //????????? ???0x07?????
+ 409   1          {
+ 410   2              ucNavKeyPast = ucNavKeyCurrent;
+ 411   2              while( ucNavKeyCurrent != 0x07 )        //????????
+ 412   2                  ucNavKeyCurrent = NavKeyCheck();
+ 413   2               x = 0x01;  s =flag2/2;
+ 414   2              if(flag2%2==0) x=0x10;
+ 415   2              //????,?????????? 
+ 416   2              switch( ucNavKeyPast )
+ 417   2              {
+ 418   3                  case 0x00 :                     //K3
+ 419   3                      if( btKey3Flag == 0 )
+ 420   3                      {
+ 421   4                          btKey3Flag = 1;
+ 422   4                      }
+ 423   3                      break;
+ 424   3                  case 0x05 :                     //??:??????1
+ 425   3                      if( date[s] >= 0xf0 && x == 0x10)
+ 426   3                          date[s] = (date[s] & 0x0f);
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 8   
+
+ 427   3                      else if(((date[s] & 0x0f) == 0x0f) && x == 0x01)
+ 428   3                        date[s] = (date[s]&0xf0) ;
+ 429   3                      else
+ 430   3                          date[s]+=x;
+ 431   3                      date_yx = 0x01;
+ 432   3                      break;
+ 433   3                  case 0x02 :                     //??:??????1
+ 434   3                      if( date[s] < 0x10 && x == 0x10 )
+ 435   3                          date[s] = (date[s] | 0xf0);
+ 436   3                      else if(((date[s] & 0x0f) == 0x00 )&& x==0x01 )
+ 437   3                        date[s] = (date[s] | 0x0f);
+ 438   3                      else
+ 439   3                  date[s]-=x;
+ 440   3              date_yx = 0x02;
+ 441   3                      break;
+ 442   3                  case 0x04 :           //?? 
+ 443   3                    if(ui_state == 0x00) {
+ 444   4                      if(flag2 == 0x00) flag2=0x01;
+ 445   4                  else flag2=0x00;            
+ 446   4              }
+ 447   3              else if(ui_state == 0x01 || ui_state == 0x04){    //????????? 
+ 448   4                if(flag2 == 0x04) flag2=0x07;
+ 449   4                else flag2--;
+ 450   4              }
+ 451   3              else if( ui_state ==0x05){
+ 452   4                if(flag2 == 0x00) flag2=0x07;
+ 453   4                else flag2--;
+ 454   4              }
+ 455   3              else flag2 = 0xff;
+ 456   3              s=flag2/2;
+ 457   3              date_yx = 0x03;
+ 458   3              break;    
+ 459   3            case 0x01 :           //?? 
+ 460   3              if(ui_state == 0x00) {
+ 461   4                      if(flag2 == 0x01) flag2=0x00;
+ 462   4                  else flag2=0x01;            
+ 463   4              }
+ 464   3              else if(ui_state == 0x01 || ui_state == 0x04){
+ 465   4                if(flag2 == 0x07) flag2=0x04;
+ 466   4                else flag2++;
+ 467   4              }
+ 468   3              else if( ui_state ==0x05){
+ 469   4                if(flag2 == 0x07) flag2=0x00;
+ 470   4                else flag2++;
+ 471   4              }
+ 472   3              else flag2 = 0xff;
+ 473   3              s=flag2/2;
+ 474   3              date_yx = 0x04;
+ 475   3              break;
+ 476   3            default: 
+ 477   3                break;  
+ 478   3              }
+ 479   2          }
+ 480   1          if(ui_state == 0x00 && flag2 != 0xff && flag2 != 0xf0 ){
+ 481   2            addr=date[0];
+ 482   2        }
+ 483   1          Delay5ms();
+ 484   1      }
+ 485          //????
+ 486           
+ 487          
+ 488          void main()
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 9   
+
+ 489          {
+ 490   1        init();            //IO?????ADC??? 
+ 491   1        Uart1_Init();   //????:????
+ 492   1          Timer0_Init();
+ 493   1          IIC_init();            //IIC?????
+ 494   1          
+ 495   1          while(1){
+ 496   2            
+ 497   2            if(flag2!=0xff)   //?????????? 
+ 498   2            NavKey_Process();   //???? 
+ 499   2            
+ 500   2            //???????????——??0x00 
+ 501   2            if(ui_state == 0x00){ 
+ 502   3            if(flag2 == 0xff && Key1 == 0){
+ 503   4              Delay5ms();
+ 504   4              if(Key1 == 0){
+ 505   5                while(!Key1);
+ 506   5                flag2 = 0x01;   //?????,???????? 
+ 507   5              }     
+ 508   4              }
+ 509   3              if(flag2 == 0xff && Key2 == 0){
+ 510   4                Delay5ms();
+ 511   4                if(Key2 == 0){
+ 512   5                  while(!Key2);
+ 513   5                  ui_state = 0x80;
+ 514   5                  flag2 = 0xf0;     //???? 
+ 515   5                  date_yx = 0x00;
+ 516   5                  ES = 1;
+ 517   5                }
+ 518   4              }
+ 519   3              if(flag2 != 0xff && Key1 == 0){
+ 520   4                Delay5ms();
+ 521   4                if(Key1==0 ){
+ 522   5                  while(!Key1);
+ 523   5                  flag2=0x04;
+ 524   5                  ui_state=0x01;      //????2 
+ 525   5                  read_date[2]=read_add( addr*6 );
+ 526   5                  Delay5ms();
+ 527   5                read_date[3]=read_add(addr*6+1);
+ 528   5                }
+ 529   4              }
+ 530   3            if(Key2 == 0 && flag2 !=0xff){      //????KEY2?????? 
+ 531   4              Delay5ms();
+ 532   4              if(Key2 == 0){
+ 533   5                while(!Key2);
+ 534   5                date[2]=0x00;date[3]=0x00;
+ 535   5                flag2=0xff;
+ 536   5                ui_state = 0x00;
+ 537   5              }
+ 538   4            }   
+ 539   3          }
+ 540   2          //??2--???????????
+ 541   2          if(ui_state==0x01){
+ 542   3            if(Key1 == 0){
+ 543   4              Delay5ms();
+ 544   4              if(Key1==0){
+ 545   5                while(!Key1);
+ 546   5                if(read_date[2] == date[2]&&read_date[3] == date[3]){  //???? 
+ 547   6                  flag2 = 0xff;
+ 548   6                  ui_state = 0x06;
+ 549   6                  Delayms(600);
+ 550   6                  read_date[0]=read_add( 6*addr+2 );
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 10  
+
+ 551   6                  Delay5ms();
+ 552   6                  read_date[1]=read_add( 6*addr+3 );
+ 553   6                  Delay5ms();
+ 554   6                  read_date[2]=read_add( 6*addr+4 ); 
+ 555   6                  Delay5ms();
+ 556   6                  read_date[3]=read_add( 6*addr+5 );
+ 557   6                  date[0] = read_date[0]; date[1] = read_date[1]; 
+ 558   6                  date[2] = read_date[2]; date[3] = read_date[3]; 
+ 559   6                  flag2 = 0xf0;
+ 560   6                  ui_state=0x03;
+ 561   6                }
+ 562   5                else{                   //???? 
+ 563   6                  flag2 = 0xff;
+ 564   6                  ui_state = 0x02;
+ 565   6                  btBeepFlag=1;
+ 566   6                  Delayms(200);
+ 567   6                  btBeepFlag=0;
+ 568   6                  flag2=0x07;
+ 569   6                  ui_state = 0x01;
+ 570   6                }
+ 571   5              }
+ 572   4            }
+ 573   3             else if(Key2 == 0){      //????KEY2?????? 
+ 574   4              Delay5ms();
+ 575   4              if(Key2 == 0){
+ 576   5                while(!Key2);
+ 577   5                flag2=0x01;
+ 578   5                ui_state = 0x00;
+ 579   5              }
+ 580   4            } 
+ 581   3          }
+ 582   2          //??3--???? --????flag2 == 0xf0 
+ 583   2          if(ui_state == 0x03){
+ 584   3            if(Key2 == 0){      //???? 
+ 585   4              Delay5ms();
+ 586   4              if(Key2 == 0){
+ 587   5                while(!Key2);
+ 588   5                date[2]=0x00;date[3]=0x00;
+ 589   5                ui_state= 0x04;
+ 590   5                flag2= 0x04;
+ 591   5              }
+ 592   4            }
+ 593   3            if(btKey3Flag == 1){    //???? 
+ 594   4              Delay5ms();
+ 595   4              //if(Key3 == 0){
+ 596   4              //  while(!Key3);
+ 597   4                flag2 = 0x00;
+ 598   4                ui_state = 0x05;
+ 599   4              //}
+ 600   4            }   
+ 601   3            if(Key1 == 0){    //?????? 0x08
+ 602   4              Delay5ms();
+ 603   4              if(Key1 == 0){
+ 604   5                while(!Key1);
+ 605   5                flag2 = 0xf0;
+ 606   5                ui_state = 0x08;
+ 607   5                ES = 1;
+ 608   5              }
+ 609   4            }
+ 610   3          }
+ 611   2          //????  
+ 612   2          if(ui_state == 0x04){
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 11  
+
+ 613   3            if(Key1 == 0){
+ 614   4              Delay5ms();
+ 615   4              if(Key1 == 0){
+ 616   5                while(!Key1);
+ 617   5                write_add(addr*6,date[2]);
+ 618   5                Delay5ms();
+ 619   5                write_add(addr*6+1,date[3]);
+ 620   5                flag2 = 0xff;
+ 621   5                ui_state = 0x07;
+ 622   5                Delayms(1000);        //?????
+ 623   5                flag2 = 0xf0; 
+ 624   5                ui_state = 0x03;
+ 625   5                date[0] = read_date[0]; date[1] = read_date[1]; 
+ 626   5                date[2] = read_date[2]; date[3] = read_date[3];     //?????? 
+ 627   5              } 
+ 628   4            } 
+ 629   3          }
+ 630   2          //????
+ 631   2          if(ui_state == 0x05){
+ 632   3            if(Key1 == 0){
+ 633   4              Delay5ms();
+ 634   4              if(Key1 == 0){
+ 635   5                while(!Key1);
+ 636   5                write_add(6*addr+2,date[0]);
+ 637   5                Delay5ms();           //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 638   5                write_add(6*addr+3,date[1]);
+ 639   5                Delay5ms();
+ 640   5                write_add(6*addr+4,date[2]);
+ 641   5                Delay5ms();
+ 642   5                write_add(6*addr+5,date[3]);
+ 643   5                read_date[0] = date[0]; 
+ 644   5                read_date[1] = date[1]; 
+ 645   5                read_date[2] = date[2]; 
+ 646   5                read_date[3] = date[3];     //?????? 
+ 647   5                flag2 = 0xff; 
+ 648   5                ui_state = 0x07;
+ 649   5                Delayms(600);       //?????
+ 650   5                ui_state = 0x03;
+ 651   5                flag2 = 0xf0;
+ 652   5              }
+ 653   4            }
+ 654   3          }
+ 655   2          //????
+ 656   2          if(ui_state == 0x08){
+ 657   3            if(Key2 == 0){      //Key2???? 
+ 658   4              Delay5ms();
+ 659   4              if(Key2 == 0){
+ 660   5                while(!Key2);
+ 661   5                write_add(6*addr+2,date[0]);
+ 662   5                Delay5ms();           //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 663   5                write_add(6*addr+3,date[1]);
+ 664   5                Delay5ms();
+ 665   5                write_add(6*addr+4,date[2]);
+ 666   5                Delay5ms();
+ 667   5                write_add(6*addr+5,date[3]); 
+ 668   5              } 
+ 669   4            }
+ 670   3            if(btKey3Flag == 1) { //Key3?? 
+ 671   4              SendData( date[0] );
+ 672   4                      SendData( date[1] );
+ 673   4                      SendData( date[2] );
+ 674   4                      SendData( date[3] );
+C51 COMPILER V9.51   ZSL_PR                                                                09/18/2020 13:14:04 PAGE 12  
+
+ 675   4            }
+ 676   3            if(Key1 == 0){
+ 677   4              Delay5ms();
+ 678   4              if(Key1 == 0){
+ 679   5                while(!Key1);
+ 680   5                flag2 = 0xff;
+ 681   5                ui_state = 0x00;
+ 682   5                ES=0; 
+ 683   5                date[0]=0;date[1]=0;date[2]=0;date[3]=0;
+ 684   5                read_date[0]=0;read_date[1]=0;read_date[2]=0;read_date[3]=0;
+ 685   5                
+ 686   5              }
+ 687   4            } 
+ 688   3             
+ 689   3          }
+ 690   2          //????
+ 691   2          if(ui_state == 0x80) {
+ 692   3           while(1){
+ 693   4            if(Key1 == 0){
+ 694   5              Delay5ms();
+ 695   5              if(Key1 == 0){
+ 696   6                while(!Key1);
+ 697   6                ui_state = 0x00;
+ 698   6                flag2 = 0xff;
+ 699   6                date_yx = 0x00;
+ 700   6                ES = 0;
+ 701   6                break;
+ 702   6              }
+ 703   5            }
+ 704   4            NavKey_Process();   //???? 
+ 705   4            Delayms(5);
+ 706   4            if(date_yx != 0x00){
+ 707   5              SendData( date_yx );
+ 708   5              Delayms(2);
+ 709   5              date_yx = 0x00;
+ 710   5            }
+ 711   4           }
+ 712   3          }
+ 713   2          if (btKey3Flag == 1) btKey3Flag = 0 ; 
+ 714   2        } 
+ 715   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1924    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     64       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

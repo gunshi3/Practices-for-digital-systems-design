@@ -1,0 +1,382 @@
+C51 COMPILER V9.51   MAIN                                                                  04/04/2020 23:06:32 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /**********************
+   2          STC-B_DEMO.c for 可控步进电机(正反转暂停)
+   3          型号:STC15F2K60S2 主频:11.0592MHz
+   4          ************************/
+   5          #include <STC15F2K60S2.H>
+   6          #define uint  unsigned int
+   7          #define uchar unsigned char
+   8          
+   9          /*---------宏定义---------*/
+  10          #define cstDigBegin   7         // 数码管显示位选起始,用户可修改
+  11          #define cstDigEnd     7         // 数码管显示位选终止位。8为发光二极管,大于8 可用于调节显示量度
+  12          
+  13          #define cstDig0       11        //数码管各位上显示内容数组序号,用户可修改
+  14          #define cstDig1       11        //11代表段选无显示  
+  15          #define cstDig2       11
+  16          #define cstDig3       11
+  17          #define cstDig4       11
+  18          #define cstDig5       11
+  19          #define cstDig6       11
+  20          #define cstDig7       ucSpeed_Seg  //P0口显示步进电机速度，范围1-4,1档速度最快
+  21          #define cstDig8       ucLedTmp         //流水灯
+  22          
+  23          #define cstKeyMaxNum      10                            //10次读取按键值
+  24          #define cstKeyCntMaxNum   (0x80 + cstKeyMaxNum / 3 * 2)  //按键消抖计数初值
+  25          
+  26          #define cstSpeedMaxLevel  5   //上限范围，原代码4档速度，１档最快，
+  27          #define cstSpeed100usCnt  50  //原代码设想5ms*ucSpeed,本代码放在100us节拍处理
+  28          #define cstClockXmsMaxNum ((ucSpeed)*(cstSpeed100usCnt)) //Xms时钟
+  29          
+  30          /*---------函数声明---------*/
+  31          void Init();                  //Initial
+  32          void T10us_Process();         //Function for 10us
+  33          void T100us_Process();        //Function for 100us
+  34          void T1ms_Process();          //Function for 1ms
+  35          void T10ms_Process();         //Function for 10ms
+  36          void T100ms_Process();        //Function for 100ms
+  37          void TXms_Process();          //Function for Xms,用户可修改
+  38          
+  39          void Seg7LedDisplay( uchar s, uchar e );  //显示单个数码管或流水灯
+  40          void Key_Scan();                          //按键扫描检测
+  41          void Xstep_Process();                     //步进电机正反转暂停控制
+  42          
+  43          /*---------引脚别名定义---------*/
+  44          sbit sbtKey1 = P3 ^ 2;            //按键1,根据学习板,用户可修改
+  45          sbit sbtKey2 = P3 ^ 3;            //按键2
+  46          sbit sbtKey3 = P1 ^ 7;            //按键3
+  47          sbit sbtS1  = P4 ^ 1;             //步进电机相1
+  48          sbit sbtS2  = P4 ^ 2;             //步进电机相2
+  49          sbit sbtS3  = P4 ^ 3;             //步进电机相3
+  50          sbit sbtS4  = P4 ^ 4;             //步进电机相4
+  51          
+  52          /*---------变量定义---------*/
+  53          //定时器计数时间标志
+  54          bit btT10usFlag = 0;      //时基10uS
+  55          bit btT100usFlag = 0;     //50个＝5ms单相通电时间
+C51 COMPILER V9.51   MAIN                                                                  04/04/2020 23:06:32 PAGE 2   
+
+  56          bit btT1msFlag = 0;       //数码管扫描频率节拍
+  57          bit btT10msFlag = 0;      //按键消抖节拍
+  58          bit btT100msFlag = 0;     //数码管显示数据更新
+  59          bit btTXmsFlag = 0;       //步进电机输出 ucSpeed*1mS
+  60          bit btTXmsFlag_en = 1;    //步进电机启动开关,默认开启(0暂停1启动)
+  61          
+  62          //定时器内部专用时间计数
+  63          uchar ucT10usCnt = 0;    //时基10uS
+  64          uchar ucT100usCnt = 0;   //原代码里设想的是5ms 单相通电时间
+  65          uchar ucT1msCnt = 0;
+  66          uchar ucT10msCnt = 0;
+  67          uchar ucT100msCnt = 0;
+  68          
+  69          // Fun()用户功能实现所用变量
+  70          uchar ucKey1Cnt = 0;    //按键1消抖计数器
+  71          uchar ucKey2Cnt = 0;    //按键2消抖计数器
+  72          uchar ucKey3Cnt = 0;    //按键3消抖计数器
+  73          uchar ucKeyAllCnt = 0;   //按键消抖总延时计数器
+  74          
+  75          uchar ucSpeed_Seg = 1;    //速度显示序号
+  76          uchar ucSpeed = 1;        //步进电机的速度参数
+  77          
+  78          bit  btKey1Current = 1;   //按键1当前的状态
+  79          bit  btKey1Past = 1;      //按键1前一个状态
+  80          bit  btKey2Current = 1;   //按键2当前的状态
+  81          bit  btKey2Past = 1;      //按键2前一个状态
+  82          bit  btKey3Current = 1;   //按键3当前的状态
+  83          bit  btKey3Past = 1;      //按键3前一个状态
+  84          bit  btRotationFlag = 0;   //步进电机旋转方向0正转1反转
+  85          
+  86          uchar ucClockXms = 0;     //步进电机产生信号控制正反转暂停所用计数器
+  87          uchar ucLedTmp = 0x00;    //流水灯显示值
+  88          
+  89          /*---------主函数---------*/
+  90          void main()
+  91          {
+  92   1          Init();
+  93   1          ucLedTmp = 0x00;            //流水灯显示值
+  94   1          while( 1 )
+  95   1          {
+  96   2              if( btT10usFlag )
+  97   2              {
+  98   3                  btT10usFlag = 0;  T10us_Process();
+  99   3              }
+ 100   2              if( btT100usFlag )
+ 101   2              {
+ 102   3                  btT100usFlag = 0;  T100us_Process();
+ 103   3              }
+ 104   2              if( btT1msFlag )
+ 105   2              {
+ 106   3                  btT1msFlag = 0;  T1ms_Process();
+ 107   3              }
+ 108   2              if( btT10msFlag )
+ 109   2              {
+ 110   3                  btT10msFlag = 0;  T10ms_Process();
+ 111   3              }
+ 112   2              if( btT100msFlag )
+ 113   2              {
+ 114   3                  btT100msFlag = 0; T100ms_Process();
+ 115   3              }
+ 116   2              if( ( btTXmsFlag && btTXmsFlag_en ) )  //Xms标志位且使能位有效
+ 117   2      //才执行步进电机转动
+C51 COMPILER V9.51   MAIN                                                                  04/04/2020 23:06:32 PAGE 3   
+
+ 118   2              {
+ 119   3                  btTXmsFlag = 0;  TXms_Process();
+ 120   3              }
+ 121   2          }
+ 122   1      }
+ 123          
+ 124          /*---------T0定时器中断服务处理函数--------*/
+ 125          void T0_Process() interrupt 1
+ 126          {
+ 127   1          btT10usFlag = 1;
+ 128   1          ucT10usCnt++;
+ 129   1          if( ucT10usCnt == 10 )
+ 130   1          {
+ 131   2              ucT10usCnt = 0;  btT100usFlag = 1;   ucT100usCnt++;
+ 132   2          }
+ 133   1          if( ucT100usCnt == 10 )
+ 134   1          {
+ 135   2              ucT100usCnt = 0;  btT1msFlag = 1;    ucT1msCnt++;
+ 136   2          }
+ 137   1          if( ucT1msCnt == 10 )
+ 138   1          {
+ 139   2              ucT1msCnt = 0;   btT10msFlag = 1;   ucT10msCnt++;
+ 140   2          }
+ 141   1          if( ucT10msCnt == 10 )
+ 142   1          {
+ 143   2              ucT10msCnt = 0;  btT100msFlag = 1;
+ 144   2          }
+ 145   1      }
+ 146          /*---------初始化函数--------*/
+ 147          void Init()
+ 148          {
+ 149   1          //Hardware Init
+ 150   1          P0M0 = 0xFF;
+ 151   1          P0M1 = 0x00;
+ 152   1          P0 = 0x00;
+ 153   1          P2M0 = 0x0f; //设置P2.0-3为推挽:对应了LED的控制
+ 154   1          P2M1 = 0x00;
+ 155   1          P4M0 = 0xff;    //P4口设置推挽输出
+ 156   1          P4M1 = 0xe1;
+ 157   1          P4 = 0xe1;      //设置P4口为低电平，避免复位时步进电机5V电平接口的影响
+ 158   1      
+ 159   1          //Interrupt Init
+ 160   1          /*10微秒@11.0592MHz 16可重载  定时器0
+ 161   1            ISP软件生成，原来是1ms在11.592MHz 12T模式 */
+ 162   1          AUXR |= 0x80;   //定时器时钟1T模式
+ 163   1          TMOD &= 0xF0;   //设置定时器模式
+ 164   1          TL0 = 0x91;     //设置定时初值
+ 165   1          TH0 = 0xFF;     //设置定时初值
+ 166   1          EA = 1;         //打开总的中断
+ 167   1          ET0 = 1;        //开启定时器中断
+ 168   1          TF0 = 0;        //清除TF0标志
+ 169   1          TR0 = 1;        //启动定时器
+ 170   1      
+ 171   1          ucKey1Cnt = cstKeyCntMaxNum;
+ 172   1          ucKey2Cnt = cstKeyCntMaxNum;
+ 173   1          ucKey3Cnt = cstKeyCntMaxNum;
+ 174   1          ucKeyAllCnt = cstKeyMaxNum;
+ 175   1      }
+ 176          
+ 177          /*---------各时钟节拍处理函数--------*/
+ 178          void T10us_Process()
+ 179          {
+C51 COMPILER V9.51   MAIN                                                                  04/04/2020 23:06:32 PAGE 4   
+
+ 180   1      
+ 181   1      }
+ 182          void T100us_Process()           //100us适用步进电机每拍单相计数,计满产生标志
+ 183          {
+ 184   1          ucClockXms++;
+ 185   1          if ( ucClockXms == ( cstClockXmsMaxNum ) )
+ 186   1          {
+ 187   2              ucClockXms = 0;   btTXmsFlag = 1;
+ 188   2          }
+ 189   1      }
+ 190          void T1ms_Process()             //1ms适用数码管扫描服务
+ 191          {
+ 192   1          Seg7LedDisplay( cstDigBegin, cstDigEnd );
+ 193   1      }
+ 194          void T10ms_Process()           //10ms适用按键扫描服务
+ 195          {
+ 196   1          Key_Scan();
+ 197   1      }
+ 198          void TXms_Process()            //Xms适用步进电机服务
+ 199          {
+ 200   1          Xstep_Process();
+ 201   1      }
+ 202          void T100ms_Process()          //100ms适用数据显示更新
+ 203          {
+ 204   1          ucSpeed_Seg = ucSpeed;
+ 205   1      }
+ 206          
+ 207          /*---------数码管与发光二极管显示函数--------*/
+ 208          void Seg7LedDisplay( uchar s, uchar  e )
+ 209          {
+ 210   1          unsigned char arrSegSelect[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f, 0x40, 0x00
+             -}; //  数码管显示译码表
+ 211   1          /* 序号:   0    1    2    3     4    5    6      7     8     9     10   11          */
+ 212   1          /* 显示:   0    1    2    3     4    5    6      7     8     9     -   (无)      */
+ 213   1          static  int  i;
+ 214   1          P2 = ( P2 & 0xf0 ) | i;
+ 215   1          switch( i )
+ 216   1          {
+ 217   2              case 0:
+ 218   2                  P0 = arrSegSelect[cstDig0];   break;
+ 219   2              case 1:
+ 220   2                  P0 = arrSegSelect[cstDig1];   break;
+ 221   2              case 2:
+ 222   2                  P0 = arrSegSelect[cstDig2];   break;
+ 223   2              case 3:
+ 224   2                  P0 = arrSegSelect[cstDig3];   break;
+ 225   2              case 4:
+ 226   2                  P0 = arrSegSelect[cstDig4];   break;
+ 227   2              case 5:
+ 228   2                  P0 = arrSegSelect[cstDig5];   break;
+ 229   2              case 6:
+ 230   2                  P0 = arrSegSelect[cstDig6];   break;
+ 231   2              case 7:
+ 232   2                  P0 = arrSegSelect[cstDig7];   break;
+ 233   2              case 8:
+ 234   2                  P0 = cstDig8;           break;
+ 235   2              default:
+ 236   2                  P0 = 0x00;            break;
+ 237   2          }
+ 238   1          if( ++i > e ) i = s;
+ 239   1      }
+ 240          
+C51 COMPILER V9.51   MAIN                                                                  04/04/2020 23:06:32 PAGE 5   
+
+ 241          /*---------按键扫描检测函数--------*/
+ 242          void Key_Scan()
+ 243          {
+ 244   1          if( sbtKey1 == 0 )                          //按键按下时，按键计数器减1
+ 245   1              ucKey1Cnt--;
+ 246   1          if( sbtKey2 == 0 )
+ 247   1              ucKey2Cnt--;
+ 248   1          if( sbtKey3 == 0 )
+ 249   1              ucKey3Cnt--;
+ 250   1          ucKeyAllCnt--;                           //总的次数减1
+ 251   1      
+ 252   1          if( ucKeyAllCnt == 0 )                      //10次完了
+ 253   1          {
+ 254   2              if( ucKey1Cnt < 0x80 )
+ 255   2              {
+ 256   3                  btKey1Current = 0;
+ 257   3                  if( btKey1Past == 1 )
+ 258   3                  {
+ 259   4                      btKey1Past = 0;                 //下降沿
+ 260   4                      ucSpeed++;     //步进电机的转速改变，ucSpeed值越大，转速越慢
+ 261   4                      if( ucSpeed == cstSpeedMaxLevel )
+ 262   4                          ucSpeed = 1;
+ 263   4                  }
+ 264   3              }
+ 265   2              if( ucKey1Cnt >= 0x80 )
+ 266   2              {
+ 267   3                  btKey1Current = 1;
+ 268   3                  if( btKey1Past == 0 )
+ 269   3                      btKey1Past = 1;                //上升沿（假设不做动作那就继续）
+ 270   3              }
+ 271   2              if( ucKey2Cnt < 0x80 )
+ 272   2              {
+ 273   3                  btKey2Current = 0;
+ 274   3                  if( btKey2Past == 1 )
+ 275   3                  {
+ 276   4                      btKey2Past = 0;               //下降沿（按键改变步进电机转向）
+ 277   4                      btRotationFlag = ~btRotationFlag;
+ 278   4                  }
+ 279   3              }
+ 280   2              if( ucKey2Cnt >= 0x80 )
+ 281   2              {
+ 282   3                  btKey2Current = 1;
+ 283   3                  if( btKey2Past == 0 )
+ 284   3                      btKey2Past = 1;                //上升沿（假设不做动作那就继续）
+ 285   3              }
+ 286   2              if( ucKey3Cnt < 0x80 )
+ 287   2              {
+ 288   3                  btKey3Current = 0;
+ 289   3                  if( btKey3Past == 1 )
+ 290   3                  {
+ 291   4                      btKey3Past = 0;                  //下降沿
+ 292   4                      btTXmsFlag_en = ~btTXmsFlag_en;  //按键改变暂停或开启电机
+ 293   4                  }
+ 294   3              }
+ 295   2              if( ucKey3Cnt >= 0x80 )
+ 296   2              {
+ 297   3                  btKey3Current = 1;
+ 298   3                  if( btKey3Past == 0 )
+ 299   3                      btKey3Past = 1;                //上升沿（假设不做动作那就继续）
+ 300   3              }
+ 301   2              ucKey1Cnt = cstKeyCntMaxNum;          //新一轮判断装初值
+ 302   2              ucKey2Cnt = cstKeyCntMaxNum;
+C51 COMPILER V9.51   MAIN                                                                  04/04/2020 23:06:32 PAGE 6   
+
+ 303   2              ucKey3Cnt = cstKeyCntMaxNum;
+ 304   2              ucKeyAllCnt = cstKeyMaxNum;
+ 305   2          }
+ 306   1      }
+ 307          
+ 308          /*---------步进电机正反转暂停控制函数--------*/
+ 309          void Xstep_Process()
+ 310          {
+ 311   1          static uchar i = 1;                      //步进电机控制脉冲对应的IO口位置
+ 312   1          if( btRotationFlag == 0 )                 //控制步进电机正转
+ 313   1          {
+ 314   2              switch( i++ )                      //循环改变不同IO脚的脉冲电平
+ 315   2              {
+ 316   3                  case 1:
+ 317   3                      sbtS1 = 1;  sbtS2 = 0;  sbtS3 = 0;  sbtS4 = 0;  break;
+ 318   3                  case 2:
+ 319   3                      sbtS1 = 0;  sbtS2 = 1;  sbtS3 = 0;  sbtS4 = 0;  break;
+ 320   3                  case 3:
+ 321   3                      sbtS1 = 0;  sbtS2 = 0;  sbtS3 = 1;  sbtS4 = 0;  break;
+ 322   3                  case 4:
+ 323   3                      sbtS1 = 0;  sbtS2 = 0;  sbtS3 = 0;  sbtS4 = 1;  break;
+ 324   3                  default:
+ 325   3                      sbtS1 = 0;  sbtS2 = 0;  sbtS3 = 0;  sbtS4 = 0;  break;
+ 326   3              }
+ 327   2              if( i == 5 )
+ 328   2                  i = 1;
+ 329   2          }                                      //控制步进电机反转
+ 330   1          else
+ 331   1          {
+ 332   2              switch( i++ )
+ 333   2              {
+ 334   3                  case 1:
+ 335   3                      sbtS1 = 0;  sbtS2 = 0;  sbtS3 = 0;  sbtS4 = 1;  break;
+ 336   3                  case 2:
+ 337   3                      sbtS1 = 0;  sbtS2 = 0;  sbtS3 = 1;  sbtS4 = 0;  break;
+ 338   3                  case 3:
+ 339   3                      sbtS1 = 0;  sbtS2 = 1;  sbtS3 = 0;  sbtS4 = 0;  break;
+ 340   3                  case 4:
+ 341   3                      sbtS1 = 1;  sbtS2 = 0;  sbtS3 = 0;  sbtS4 = 0;  break;
+ 342   3                  default:
+ 343   3                      sbtS1 = 0;  sbtS2 = 0;  sbtS3 = 0;  sbtS4 = 0;  break;
+ 344   3              }
+ 345   2              if( i == 5 )
+ 346   2                  i = 1;
+ 347   2          }
+ 348   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    606    ----
+   CONSTANT SIZE    =     12    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16      14
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =     14    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

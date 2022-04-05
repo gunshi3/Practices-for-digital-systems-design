@@ -1,0 +1,308 @@
+C51 COMPILER V9.51   LIGHT                                                                 08/11/2016 22:07:07 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE LIGHT
+OBJECT MODULE PLACED IN light.OBJ
+COMPILER INVOKED BY: F:\dan pian ji\C51\BIN\C51.EXE light.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include "STC15F2K60S2.H"
+   2          
+   3          sbit SEL0=P2^0;     //定义引脚
+   4          sbit SEL1=P2^1;
+   5          sbit SEL2=P2^2;
+   6          sbit SEL3=P2^3;
+   7          sbit beep=P3^4;   //蜂鸣器引脚
+   8          sbit Key1=P3^2;    //Key1   切换标志位 
+   9          
+  10          #define uint unsigned int
+  11          #define ulint unsigned long
+  12          #define uchar unsigned char 
+  13          #define NMAX_KEY 100  //100次读取按键值 
+  14          
+  15          uint time=0;        //延时
+  16          
+  17          uint l=0;           //执行光的次数
+  18          ulint suml=0;       //光AD值得总和
+  19          
+  20          uint light=0;       //光
+  21          uint light_down=20; //警报下限
+  22          uint light_up=100;  //警报上限
+  23          uchar flag=0;       //切换模式，0代表下限，1代表上限
+  24          
+  25          //设置用于显示光的三个变量
+  26          uint light_bai=0;   //百位
+  27          uint light_shi=0;   //十位
+  28          uint light_ge =0;   //个位
+  29          //警报值
+  30          uint down_bai=0;    //百位
+  31          uint down_shi=0;    //十位
+  32          uint down_ge =0;    //个位
+  33          //警报值
+  34          uint up_bai=0;    //百位
+  35          uint up_shi=0;    //十位
+  36          uint up_ge =0;    //个位
+  37          /**********************
+  38          
+  39          变量定义
+  40          ***********************/
+  41          uchar G_count;
+  42          uchar display;
+  43          uint Key1_count;
+  44          uint Key2_count;
+  45          uint Key3_count;
+  46          uint Key_count;
+  47          
+  48          bit Key1_C;       //key1当前的状态
+  49          bit Key1_P;       //key1前一个状态
+  50          
+  51          //数码管上显示0-F
+  52          char segtable[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,
+  53                           0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71};
+  54          
+  55          void Delay(int n);
+C51 COMPILER V9.51   LIGHT                                                                 08/11/2016 22:07:07 PAGE 2   
+
+  56          void weixuan(char i);
+  57          void SEG_Display();
+  58          void check();
+  59          void InitADC_light();
+  60          void date_processlight();
+  61          void date_processlight_down();
+  62          void date_processlight_up();
+  63          
+  64          void Delay(int n)     //延时函数
+  65          {
+  66   1        int x;
+  67   1        while(n--)
+  68   1        {
+  69   2          x=60;
+  70   2          while(x--);
+  71   2        }
+  72   1      }
+  73          
+  74          void weixuan(char i)  //数码管位的选择
+  75          {
+  76   1        SEL2=i/4;
+  77   1        SEL1=i%4/2;
+  78   1        SEL0=i%2;
+  79   1      }
+  80          void SEG_Display()
+  81          {
+  82   1        //用于设置光的位数
+  83   1        P0=0;
+  84   1        weixuan(5);
+  85   1        P0=segtable[light_bai];
+  86   1        Delay(10);
+  87   1        
+  88   1        P0=0;
+  89   1        weixuan(6);
+  90   1        P0=segtable[light_shi];
+  91   1        Delay(10);
+  92   1        
+  93   1        P0=0;
+  94   1        weixuan(7);
+  95   1        P0=segtable[light_ge];
+  96   1        Delay(10);
+  97   1        
+  98   1        if(flag==0)    //flag为0 显示下限值 020
+  99   1        {
+ 100   2          P0=0;
+ 101   2          weixuan(0);
+ 102   2          P0=segtable[down_bai];
+ 103   2          Delay(10);
+ 104   2        
+ 105   2          P0=0;
+ 106   2          weixuan(1);
+ 107   2          P0=segtable[down_shi];
+ 108   2          Delay(10);
+ 109   2        
+ 110   2          P0=0;
+ 111   2          weixuan(2);
+ 112   2          P0=segtable[down_ge];
+ 113   2          Delay(10);
+ 114   2        } 
+ 115   1        if(flag==1)   //flag为1 显示上限值 100
+ 116   1        {
+ 117   2          P0=0;
+C51 COMPILER V9.51   LIGHT                                                                 08/11/2016 22:07:07 PAGE 3   
+
+ 118   2          weixuan(0);
+ 119   2          P0=segtable[up_bai];
+ 120   2          Delay(10);
+ 121   2        
+ 122   2          P0=0;
+ 123   2          weixuan(1);
+ 124   2          P0=segtable[up_shi];
+ 125   2          Delay(10);
+ 126   2        
+ 127   2          P0=0;
+ 128   2          weixuan(2);
+ 129   2          P0=segtable[up_ge];
+ 130   2          Delay(10);
+ 131   2        }
+ 132   1      }
+ 133          
+ 134          void main()
+ 135          {
+ 136   1        P1M1=0x00;            //将P1^7设置为推挽模式，其余为准双向口模式
+ 137   1        P1M0=0x80;         
+ 138   1        P0M1=0x00;            //设置P0为推挽模式，点亮数码管
+ 139   1        P0M0=0xff;
+ 140   1        P2M1=0x00;
+ 141   1        P2M0=0x08;            //将P2^3设置为推挽模式，其余为准双向口模式
+ 142   1        P3M1=0x00;
+ 143   1        P3M0=0x10;            //设置P3^4为推挽模式
+ 144   1        SEL3=0;               //熄灭LED灯
+ 145   1        
+ 146   1        /*初始化所有按键的当前状态、前一个状态*/
+ 147   1        Key1_C=1;             //key1当前的状态
+ 148   1        Key1_P=1;             //key1前一个状态
+ 149   1        Key1_count=0x80+NMAX_KEY/3*2;
+ 150   1        Key_count=NMAX_KEY;
+ 151   1        
+ 152   1        IE=0xa8;              //EA=1打开总中断，EADC=1允许A/D转化中断，ET1=1允许T1中断  
+ 153   1        TMOD=0x10;            //使用定时器1，16位不可重装载模式，TH1、TL1全用
+ 154   1        TH1=(65535-100)/256;  //高8位赋初值，定时400周期
+ 155   1        TL1=(65535-100)%256;  //低8位赋初值
+ 156   1        TR1=1;                //启动定时器1
+ 157   1        
+ 158   1        InitADC_light();
+ 159   1        while(1)
+ 160   1        {
+ 161   2          SEG_Display();
+ 162   2        }
+ 163   1      }
+ 164          
+ 165          void InitADC_light()    //初始化光ADC
+ 166          {
+ 167   1        P1ASF=0xff;           //将P1口作为模拟功能A/D使用
+ 168   1        ADC_RES=0;            //转换结果清零
+ 169   1        ADC_RESL=0;
+ 170   1        ADC_CONTR=0x8c;       //ADC_POWER=1打开A/D转换器电源;ADC_START=1启动模拟转换器ADC;CHS=100选择P1^4作为A/D输入
+             -使用
+ 171   1        CLK_DIV=0x20;
+ 172   1      }
+ 173          
+ 174          //分别取出温度和光照的百位、十位、个位
+ 175          void date_processlight_down()
+ 176          {
+ 177   1        down_bai=light_down%1000/100;
+ 178   1        down_shi=light_down%100/10;
+C51 COMPILER V9.51   LIGHT                                                                 08/11/2016 22:07:07 PAGE 4   
+
+ 179   1        down_ge =light_down%10;
+ 180   1      }
+ 181          void date_processlight_up()
+ 182          {
+ 183   1        up_bai=light_up%1000/100;
+ 184   1        up_shi=light_up%100/10;
+ 185   1        up_ge =light_up%10;
+ 186   1      }
+ 187          void date_processlight()
+ 188          {
+ 189   1        light_bai=light%1000/100;
+ 190   1        light_shi=light%100/10;
+ 191   1        light_ge =light%10;
+ 192   1      }
+ 193          
+ 194          void check()
+ 195          {
+ 196   1            if(Key1==0)
+ 197   1            Key1_count--;
+ 198   1        
+ 199   1            Key_count--;          //总的次数减1
+ 200   1      
+ 201   1            if(Key_count==0)      //100次完了
+ 202   1            {
+ 203   2        
+ 204   2              if(Key1_count<0x80)
+ 205   2              {
+ 206   3                Key1_C=0;
+ 207   3                if(Key1_P==1)     //下降沿（按键做动作）
+ 208   3                {
+ 209   4                  Key1_P=0;
+ 210   4                  flag=!flag;
+ 211   4                }
+ 212   3              }
+ 213   2              if(Key1_count>=0x80)
+ 214   2              {
+ 215   3                Key1_C=1;
+ 216   3                if(Key1_P==0)
+ 217   3                   Key1_P=1;      //上升沿（假设不做动作那就继续）
+ 218   3              }
+ 219   2        
+ 220   2              //新一轮的判断
+ 221   2              Key1_count=0x80+NMAX_KEY/3*2;
+ 222   2              Key_count=NMAX_KEY;
+ 223   2            }
+ 224   1      }
+ 225          
+ 226          void Timer1_Routine() interrupt 3 //3为定时器1中断编号
+ 227          {
+ 228   1        IE=0x00;                        //关闭总中断
+ 229   1        TR1=0;                          //定时器1停止
+ 230   1        TH1=(65535-100)/256;            //重新赋值
+ 231   1        TL1=(65535-100)%256;
+ 232   1      
+ 233   1        check();
+ 234   1        if(flag==0)
+ 235   1        {
+ 236   2          if(light<light_down)
+ 237   2              beep=~beep;              //产生方波使得蜂鸣器发声
+ 238   2          else beep=0;                 //不使用蜂鸣器时，讲引脚置0——处于低电平
+ 239   2        }
+ 240   1        if(flag==1)
+C51 COMPILER V9.51   LIGHT                                                                 08/11/2016 22:07:07 PAGE 5   
+
+ 241   1        {
+ 242   2          if(light>light_up)
+ 243   2              beep=~beep;             //产生方波使得蜂鸣器发声
+ 244   2          else beep=0;
+ 245   2        }
+ 246   1      
+ 247   1        IE=0xa8;                      //打开总中断
+ 248   1        TR1=1;                        //启动定时器1
+ 249   1      }
+ 250          
+ 251          //AD中断
+ 252          void adc_isr() interrupt 5 using 1
+ 253          {
+ 254   1        time++;
+ 255   1        IE=0x00;                      //关闭中断
+ 256   1        
+ 257   1        if(time>2000)                 //取多次值求平均值减小误差
+ 258   1        {
+ 259   2      
+ 260   2            light=(suml+l/2)/l;       //四舍五入
+ 261   2            suml=0;
+ 262   2            l=0;
+ 263   2            time=0;
+ 264   2            date_processlight();
+ 265   2            date_processlight_down();
+ 266   2            date_processlight_up();
+ 267   2        }
+ 268   1      
+ 269   1          //处理光部分的数据
+ 270   1          l++;
+ 271   1          suml+=ADC_RES*256+ADC_RESL;//求l次AD值的和
+ 272   1      
+ 273   1        ADC_CONTR&=~0X10;            //转换完成后，ADC_FLAG清零
+ 274   1        ADC_CONTR|=0X08;             //转换完成后，ADC_START赋1
+ 275   1        IE=0xa8;                     //打开中断
+ 276   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    856    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     59    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

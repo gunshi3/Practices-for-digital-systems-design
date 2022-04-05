@@ -1,0 +1,187 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        08/19/2015  16:11:04  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+C:\KEIL\C51\BIN\BL51.EXE alarm.obj TO alarm RAMSIZE (256)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  alarm.obj (ALARM)
+  C:\KEIL\C51\LIB\C51S.LIB (?C_STARTUP)
+
+
+LINK MAP OF MODULE:  alarm (ALARM)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0001H     UNIT         ?DT?ALARM
+            IDATA   0009H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+                    0003H     0008H                  *** GAP ***
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     002FH     UNIT         ?PR?MAIN?ALARM
+            CODE    003DH     0029H     UNIT         ?PR?INIT_SYS?ALARM
+            CODE    0066H     001EH     UNIT         ?PR?_DELAY?ALARM
+            CODE    0084H     000FH     UNIT         ?PR?TIMER0?ALARM
+            CODE    0093H     000CH     UNIT         ?C_C51STARTUP
+            CODE    009FH     0009H     UNIT         ?CO?ALARM
+
+
+
+OVERLAY MAP OF MODULE:   alarm (ALARM)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?C_C51STARTUP
+  +--> ?PR?MAIN?ALARM
+
+?PR?MAIN?ALARM
+  +--> ?PR?INIT_SYS?ALARM
+  +--> ?CO?ALARM
+  +--> ?PR?_DELAY?ALARM
+
+
+
+SYMBOL TABLE OF MODULE:  alarm (ALARM)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        ALARM
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/19/2015  16:11:04  PAGE 2
+
+
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0093H         PUBLIC        P0M1
+  D:0096H         PUBLIC        P2M0
+  D:0080H         PUBLIC        P0
+  D:00B2H         PUBLIC        P3M0
+  D:0095H         PUBLIC        P2M1
+  D:0090H         PUBLIC        P1
+  D:00B1H         PUBLIC        P3M1
+  D:00A0H         PUBLIC        P2
+  D:00B0H         PUBLIC        P3
+  D:00C0H         PUBLIC        P4
+  D:00C8H         PUBLIC        P5
+  B:00A8H.7       PUBLIC        EA
+  D:00E8H         PUBLIC        P6
+  D:00F8H         PUBLIC        P7
+  C:009FH         PUBLIC        table
+  D:00A8H         PUBLIC        IE
+  C:0066H         PUBLIC        _delay
+  D:00B8H         PUBLIC        IP
+  D:0008H         PUBLIC        flag
+  B:00B0H.4       PUBLIC        beep
+  D:00D8H         PUBLIC        CCON
+  C:000EH         PUBLIC        main
+  D:0098H         PUBLIC        SCON
+  D:0089H         PUBLIC        TMOD
+  D:0088H         PUBLIC        TCON
+  B:00A8H.1       PUBLIC        ET0
+  D:008CH         PUBLIC        TH0
+  D:008AH         PUBLIC        TL0
+  C:0084H         PUBLIC        timer0
+  B:0088H.4       PUBLIC        TR0
+  B:00A0H.3       PUBLIC        led_sel
+  B:00A0H.4       PUBLIC        vibrate
+  C:003DH         PUBLIC        init_sys
+  D:00D0H         PUBLIC        PSW
+  B:00B0H.2       PUBLIC        key1
+  D:0094H         PUBLIC        P0M0
+  -------         PROC          _DELAY
+  D:0006H         SYMBOL        xms
+  -------         DO            
+  D:0006H         SYMBOL        i
+  D:0004H         SYMBOL        j
+  -------         ENDDO         
+  C:0066H         LINE#         38
+  C:0066H         LINE#         39
+  C:0066H         LINE#         41
+  C:006FH         LINE#         42
+  C:0083H         LINE#         43
+  -------         ENDPROC       _DELAY
+  -------         PROC          INIT_SYS
+  C:003DH         LINE#         53
+  C:003DH         LINE#         54
+  C:003DH         LINE#         55
+  C:0040H         LINE#         56
+  C:0043H         LINE#         57
+  C:0046H         LINE#         58
+  C:0048H         LINE#         59
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/19/2015  16:11:04  PAGE 3
+
+
+  C:004BH         LINE#         60
+  C:004DH         LINE#         62
+  C:004FH         LINE#         63
+  C:0052H         LINE#         64
+  C:0055H         LINE#         65
+  C:0057H         LINE#         66
+  C:0059H         LINE#         67
+  C:005BH         LINE#         69
+  C:005DH         LINE#         70
+  C:005FH         LINE#         71
+  C:0061H         LINE#         72
+  C:0063H         LINE#         73
+  C:0065H         LINE#         75
+  -------         ENDPROC       INIT_SYS
+  -------         PROC          MAIN
+  -------         DO            
+  D:0003H         SYMBOL        i
+  -------         ENDDO         
+  C:000EH         LINE#         76
+  C:000EH         LINE#         77
+  C:000EH         LINE#         79
+  C:0011H         LINE#         80
+  C:0011H         LINE#         81
+  C:0011H         LINE#         82
+  C:0014H         LINE#         83
+  C:0014H         LINE#         84
+  C:0017H         LINE#         85
+  C:0017H         LINE#         86
+  C:001CH         LINE#         87
+  C:001CH         LINE#         88
+  C:001EH         LINE#         89
+  C:001EH         LINE#         90
+  C:001EH         LINE#         92
+  C:0025H         LINE#         93
+  C:002CH         LINE#         94
+  C:002DH         LINE#         95
+  C:0030H         LINE#         96
+  C:0030H         LINE#         97
+  C:0033H         LINE#         98
+  C:0033H         LINE#         99
+  C:0036H         LINE#         100
+  C:0039H         LINE#         101
+  C:003BH         LINE#         102
+  C:003BH         LINE#         103
+  -------         ENDPROC       MAIN
+  -------         PROC          TIMER0
+  C:0084H         LINE#         109
+  C:0086H         LINE#         111
+  C:008AH         LINE#         112
+  C:008AH         LINE#         113
+  C:008CH         LINE#         114
+  C:008EH         LINE#         116
+  C:008EH         LINE#         117
+  C:0090H         LINE#         118
+  C:0090H         LINE#         119
+  -------         ENDPROC       TIMER0
+  -------         ENDMOD        ALARM
+BL51 BANKED LINKER/LOCATER V6.22                                                      08/19/2015  16:11:04  PAGE 4
+
+
+
+Program Size: data=10.0 xdata=0 code=160
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

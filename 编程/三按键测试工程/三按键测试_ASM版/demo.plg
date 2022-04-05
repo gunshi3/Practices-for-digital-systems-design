@@ -1,0 +1,21 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+C:\Users\Lenovo\Desktop\当前重要工作\2015年暑假实验教学工作\2015小学期大二进大三_电子实训Ver2\5_案例工程与测试指导\案例\整理结果\5_三按键测试\按键控制LED工程\三按键测试_ASM版\demo.uvproj
+Project File Date:  01/07/2015
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+assembling demo.asm...
+linking...
+Program Size: data=8.0 xdata=0 code=303
+creating hex file from "demo"...
+"demo" - 0 Error(s), 0 Warning(s).
+Rebuild target 'Target 1'
+assembling demo.asm...
+linking...
+Program Size: data=8.0 xdata=0 code=95
+creating hex file from "demo"...
+"demo" - 0 Error(s), 0 Warning(s).

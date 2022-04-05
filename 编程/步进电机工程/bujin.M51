@@ -1,0 +1,132 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        10/14/2015  10:57:20  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+C:\KEIL\C51\BIN\BL51.EXE bujin.obj TO bujin RAMSIZE (256)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  bujin.obj (BUJIN)
+  C:\KEIL\C51\LIB\C51S.LIB (?C_STARTUP)
+  C:\KEIL\C51\LIB\C51S.LIB (?C_INIT)
+
+
+LINK MAP OF MODULE:  bujin (BUJIN)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0002H     UNIT         ?DT?BUJIN
+            IDATA   000AH     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0005H     UNIT         ?PR?MAIN?BUJIN
+                    0008H     0003H                  *** GAP ***
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     008CH     UNIT         ?C_C51STARTUP
+            CODE    009AH     0061H     UNIT         ?PR?TIME0?BUJIN
+            CODE    00FBH     0017H     UNIT         ?PR?INIT_SYS?BUJIN
+            CODE    0112H     0005H     UNIT         ?C_INITSEG
+
+
+
+OVERLAY MAP OF MODULE:   bujin (BUJIN)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?C_C51STARTUP
+  +--> ?PR?MAIN?BUJIN
+  +--> ?C_INITSEG
+
+?PR?MAIN?BUJIN
+  +--> ?PR?INIT_SYS?BUJIN
+
+
+
+SYMBOL TABLE OF MODULE:  bujin (BUJIN)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        BUJIN
+  C:0000H         SYMBOL        _ICE_DUMMY_
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/14/2015  10:57:20  PAGE 2
+
+
+  D:0080H         PUBLIC        P0
+  D:0090H         PUBLIC        P1
+  D:00B4H         PUBLIC        P4M0
+  D:00A0H         PUBLIC        P2
+  D:00B3H         PUBLIC        P4M1
+  D:00B0H         PUBLIC        P3
+  D:00C0H         PUBLIC        P4
+  D:00C8H         PUBLIC        P5
+  D:00E8H         PUBLIC        P6
+  D:00F8H         PUBLIC        P7
+  D:00A8H         PUBLIC        IE
+  D:00B8H         PUBLIC        IP
+  B:00C0H.1       PUBLIC        s1
+  D:00D8H         PUBLIC        CCON
+  B:00C0H.2       PUBLIC        s2
+  B:00C0H.3       PUBLIC        s3
+  C:0003H         PUBLIC        main
+  B:00C0H.4       PUBLIC        s4
+  D:0098H         PUBLIC        SCON
+  D:0089H         PUBLIC        TMOD
+  D:0088H         PUBLIC        TCON
+  D:008CH         PUBLIC        TH0
+  D:008AH         PUBLIC        TL0
+  C:009AH         PUBLIC        time0
+  D:0008H         PUBLIC        i
+  C:00FBH         PUBLIC        init_sys
+  D:00D0H         PUBLIC        PSW
+  -------         PROC          TIME0
+  C:009AH         LINE#         22
+  C:00A5H         LINE#         24
+  C:00C3H         LINE#         25
+  C:00C3H         LINE#         26
+  C:00C9H         LINE#         27
+  C:00D3H         LINE#         28
+  C:00DDH         LINE#         29
+  C:00E5H         LINE#         30
+  C:00E5H         LINE#         31
+  C:00EDH         LINE#         32
+  C:00F2H         LINE#         33
+  -------         ENDPROC       TIME0
+  -------         PROC          INIT_SYS
+  C:00FBH         LINE#         41
+  C:00FBH         LINE#         42
+  C:00FBH         LINE#         43
+  C:00FEH         LINE#         44
+  C:0101H         LINE#         46
+  C:0103H         LINE#         48
+  C:0105H         LINE#         49
+  C:0108H         LINE#         50
+  C:010BH         LINE#         51
+  C:010EH         LINE#         52
+  C:0111H         LINE#         53
+  -------         ENDPROC       INIT_SYS
+  -------         PROC          MAIN
+  C:0003H         LINE#         60
+  C:0003H         LINE#         61
+  C:0003H         LINE#         62
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/14/2015  10:57:20  PAGE 3
+
+
+  C:0006H         LINE#         63
+  C:0006H         LINE#         64
+  C:0006H         LINE#         65
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        BUJIN
+
+Program Size: data=11.0 xdata=0 code=276
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

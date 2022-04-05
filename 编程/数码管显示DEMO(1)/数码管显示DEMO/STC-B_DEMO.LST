@@ -1,0 +1,140 @@
+C51 COMPILER V9.51   STC_B_DEMO                                                            05/30/2019 13:55:48 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE STC_B_DEMO
+OBJECT MODULE PLACED IN STC-B_DEMO.OBJ
+COMPILER INVOKED BY: D:\keil\C51\BIN\C51.EXE STC-B_DEMO.c BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include "STC15F2K60S2.H" 
+   2          
+   3          #define Dis_B 0
+   4          #define Dis_E 8
+   5          
+   6          unsigned char Dis_flag=0;     //记录显示位
+   7          unsigned char count_1mS=0;
+   8          unsigned char count_10mS=0;
+   9                     
+  10          bit flag_1mS=0;           //=1     1mS时刻标记
+  11          bit flag_10mS=0;
+  12          bit flag_100mS=0;
+  13          
+  14          char disp[9];          //8  ——  对应流水灯；  >8  虚拟
+  15          //
+  16          //void GPIO_Init();
+  17          //void Timer0_Init();
+  18          void Func_1mS();  //Function for 1ms
+  19          void Func_10mS();
+  20          void Func_100mS();
+  21          //void Display(char, char);
+  22          //void LED_print(char,char,char,char,char,char,char,char);
+  23          //void L_print(char);
+  24          
+  25          void Display(char Dis_min, char Dis_max) 
+  26          { char selData[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x40,0x00}; //  数码管显示译码表 
+  27   1              /* 序号:   0  1    2    3    4   5    6    7   8   9   10   11        */
+  28   1              /* 显示:   0  1    2    3    4     5    6    7   8     9    -   (无)      */ 
+  29   1       // while(Dis_flag<8 && disp[Dis_flag] == 11) ++Dis_flag; //如果L7——L0无内容显示，则跳过
+  30   1        P0 =0;                                                  //关闭段选，消影
+  31   1        P2 = (P2 & 0xf0) | (Dis_flag & 0x0f);                   //位选控制:保留P2高4位不变，低4位取Dis_flag
+  32   1        if   (Dis_flag<9)
+  33   1          {if(Dis_flag == 8) P0 = disp[Dis_flag];                  //段选：LED灯时
+  34   2          else           P0 = selData[disp[Dis_flag]];       //段选：数码管时
+  35   2        }       
+  36   1        if( ++Dis_flag > Dis_max ) Dis_flag = Dis_min;
+  37   1      }
+  38          
+  39          void LED_print(char d0,char d1,char d2,char d3,char d4,char d5,char d6,char d7)
+  40          {
+  41   1        disp[0]=d0;
+  42   1        disp[1]=d1;
+  43   1        disp[2]=d2;
+  44   1        disp[3]=d3;
+  45   1        disp[4]=d4;
+  46   1        disp[5]=d5;
+  47   1        disp[6]=d6;
+  48   1        disp[7]=d7;
+  49   1      }
+  50          //void L_print(char d)
+  51          //{
+  52          //  disp[8]=d;
+  53          //}
+  54          
+  55          void GPIO_Init(void)
+C51 COMPILER V9.51   STC_B_DEMO                                                            05/30/2019 13:55:48 PAGE 2   
+
+  56          {
+  57   1        P0M1=0x00;            //设置P0为推挽模式，点亮数码管
+  58   1        P0M0=0xff;
+  59   1        P2M1=0x00;
+  60   1        P2M0=0x08;            //将P2^3设置为推挽模式，其余为准双向口模式
+  61   1      }
+  62          
+  63          void Timer0_Init(void)
+  64          { 
+  65   1        AUXR &= 0x7f; 
+  66   1        TMOD &= 0xf0;           //使用定时器1，16位不可重装载模式，TH1、TL1全用
+  67   1        TH0=(65535-1000)/256; //高8位赋初值，定时40000周期
+  68   1        TL0=(65535-1000)%256; //低8位赋初值
+  69   1        TR0=1;                //启动定时器1 
+  70   1        ET0=1;   //开启定时器0中断
+  71   1      }
+  72          
+  73          void Timer0_isr() interrupt 1
+  74          {
+  75   1        flag_1mS = 1;
+  76   1        count_1mS++;
+  77   1        if( count_1mS == 10 )  { count_1mS = 0;    flag_10mS = 1;  count_10mS++; }
+  78   1          if( count_10mS == 10 )  { count_10mS = 0;    flag_100mS = 1; }
+  79   1      }
+  80          
+  81          void Func_1mS()
+  82          {
+  83   1        Display(Dis_B,Dis_E); 
+  84   1      }
+  85          
+  86          void Func_10ms()
+  87          {
+  88   1         
+  89   1      }
+  90          
+  91          void Func_100ms()
+  92          {
+  93   1      
+  94   1      }
+  95          
+  96          void main()
+  97          {
+  98   1        GPIO_Init();
+  99   1        Timer0_Init();
+ 100   1        EA = 1;                //总中断允许位 
+ 101   1          
+ 102   1          LED_print(3,3,4,1,5,6,7,10);
+ 103   1        disp[8]=9;
+ 104   1        
+ 105   1        Dis_flag=0;
+ 106   1      
+ 107   1        while(1)
+ 108   1        {
+ 109   2          if( flag_1mS )   { flag_1mS = 0;   Func_1mS();  }
+ 110   2          if( flag_10mS )  { flag_10mS = 0;  Func_10mS(); }
+ 111   2          if( flag_100mS ) { flag_100mS = 0; Func_100mS();}
+ 112   2        } 
+ 113   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    244    ----
+C51 COMPILER V9.51   STC_B_DEMO                                                            05/30/2019 13:55:48 PAGE 3   
+
+   CONSTANT SIZE    =     12    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12      22
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
